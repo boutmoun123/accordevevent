@@ -1,0 +1,5 @@
+cd C:\Users\LENOVO\Desktop\aaaaaa\backend
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8001
+
+cd C:\Users\LENOVO\Desktop\aaaaaa\frontend
+npm.cmd run dev

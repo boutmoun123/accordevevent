@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-slate-200;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-[#fffdfd] text-[#111936] antialiased;
+    font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+  }
+
+  html[data-theme="dark"] body {
+    @apply bg-[#180B13] text-[#FFF7FA];
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    @apply outline-none ring-2 ring-[#d92d62] ring-offset-2;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply border border-white/70 bg-white/85 backdrop-blur-xl;
+  }
+
+  html[data-theme="dark"] .glass {
+    @apply border-[#4A2134] bg-[#21101A]/95;
+  }
+
+  .field {
+    @apply w-full rounded-xl border bg-white px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-400;
+  }
+
+  html[data-theme="dark"] .field {
+    @apply border-[#4A2134] bg-[#180B13] text-[#FFF7FA] placeholder:text-[#8F7783];
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  html[data-theme="dark"] .label {
+    @apply text-[#E8D7DE];
+  }
+
+  .panel {
+    @apply rounded-2xl border bg-white p-5 shadow-sm;
+  }
+
+  html[data-theme="dark"] .panel {
+    @apply border-[#4A2134] bg-[#21101A] text-[#FFF7FA];
+  }
+
+  .pill {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+
+  .farah-dialog-overlay[data-state="open"] {
+    animation: farah-overlay-in 160ms ease-out;
+  }
+
+  .farah-dialog-overlay[data-state="closed"] {
+    animation: farah-overlay-out 120ms ease-in;
+  }
+
+  .farah-dialog-content[data-state="open"] {
+    animation: farah-dialog-in 180ms ease-out;
+  }
+
+  .farah-dialog-content[data-state="closed"] {
+    animation: farah-dialog-out 120ms ease-in;
+  }
+}
+
+@keyframes farah-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes farah-overlay-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes farah-dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes farah-dialog-out {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+}

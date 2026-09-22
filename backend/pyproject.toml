@@ -1,0 +1,52 @@
+[project]
+name = "farah-backend"
+version = "0.1.0"
+description = "Privacy-first matchmaking API for Farah.event"
+requires-python = ">=3.11"
+dependencies = [
+  "tzdata>=2025.2",
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.30,<1",
+  "sqlalchemy[asyncio]>=2.0,<3",
+  "asyncpg>=0.29,<1",
+  "aiosqlite>=0.20,<1",
+  "alembic>=1.13,<2",
+  "pydantic-settings>=2.4,<3",
+  "pyjwt>=2.9,<3",
+  "pwdlib[argon2]>=0.2,<1",
+  "httpx>=0.27,<1",
+  "qdrant-client>=1.11,<2",
+  "google-genai>=1.0,<2",
+  "python-multipart>=0.0.9,<1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "pytest-asyncio>=0.24,<1", "ruff>=0.6,<1"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+exclude = ["app.tests*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["app/tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["B008", "E701", "E702"]
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/versions/*.py" = ["E501", "I001"]
+"scripts/*.py" = ["E402", "E501", "I001"]
+"app/services/domain.py" = ["E501"]
+"app/api/v1/matchmaker.py" = ["E501"]
+"app/rag/service.py" = ["E501"]
+"app/tests/*.py" = ["E501", "I001"]
