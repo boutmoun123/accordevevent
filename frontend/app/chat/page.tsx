@@ -313,7 +313,7 @@ export default function ChatPage() {
     }
   };
   const verifyOtp = async () => {
-    if (!challenge || otp.trim().length < 4) return toast.error(text.enterOtp);
+    if (!challenge?.challenge_id || otp.trim().length < 4) return toast.error(text.enterOtp);
     setBusy(true);
     try {
       await api.verifyMalePhone(challenge.challenge_id, otp.trim());
