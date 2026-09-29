@@ -10,37 +10,57 @@ import { usePreferences } from "@/components/providers/preferences-provider";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
 import { StatusBadge } from "@/components/ui/status";
-import { governorateLabel, localizeBusinessValue } from "@/lib/i18n";
+import { domainOptions, localizeDomainValue, notSpecified, type DomainOption, type DomainOptionGroup } from "@/lib/domain-options";
 import { api } from "@/services/api";
 import type { MaleRequest } from "@/types";
 
 type EditableSection = "male_characteristics" | "desired_female_characteristics";
-type FieldRow = readonly [string, { ar: string; en: string }, string];
+type FieldRow = {
+  key: string;
+  label: { ar: string; en: string };
+  type: "number" | "text" | "select" | "multi-select";
+  group?: DomainOptionGroup;
+  unit?: "age" | "height";
+};
 
-const selfFields = [
-  ["age", { ar: "العمر", en: "Age" }, "number"],
-  ["governorate", { ar: "المحافظة", en: "Governorate" }, "text"],
-  ["marital_status", { ar: "الحالة الاجتماعية", en: "Marital status" }, "text"],
-  ["height", { ar: "الطول", en: "Height" }, "number"],
-  ["education", { ar: "التعليم", en: "Education" }, "text"],
-  ["occupation", { ar: "المهنة", en: "Occupation" }, "text"],
-  ["employment_status", { ar: "الوضع المادي", en: "Financial status" }, "text"],
-  ["religious_preference", { ar: "الدين", en: "Religion" }, "text"],
-] as const;
+const selfFields: FieldRow[] = [
+  { key: "age", label: { ar: "العمر", en: "Age" }, type: "number", unit: "age" },
+  { key: "governorate", label: { ar: "المحافظة الحالية", en: "Current governorate" }, type: "select", group: "governorate" },
+  { key: "city", label: { ar: "المدينة", en: "City" }, type: "text" },
+  { key: "origin", label: { ar: "المحافظة الأصلية", en: "Original governorate" }, type: "select", group: "governorate" },
+  { key: "marital_status", label: { ar: "الحالة الاجتماعية", en: "Marital status" }, type: "select", group: "maritalMale" },
+  { key: "height", label: { ar: "الطول", en: "Height" }, type: "number", unit: "height" },
+  { key: "education", label: { ar: "التعليم", en: "Education" }, type: "select", group: "education" },
+  { key: "education_field", label: { ar: "مجال الدراسة", en: "Education field" }, type: "text" },
+  { key: "occupation", label: { ar: "المهنة", en: "Occupation" }, type: "select", group: "occupationMale" },
+  { key: "employment_status", label: { ar: "الوضع المادي", en: "Financial status" }, type: "select", group: "financial" },
+  { key: "religious_preference", label: { ar: "الدين", en: "Religion" }, type: "select", group: "religion" },
+  { key: "children", label: { ar: "الأطفال", en: "Children" }, type: "text" },
+  { key: "values", label: { ar: "القيم والتفضيلات", en: "Values and preferences" }, type: "multi-select", group: "commitmentMale" },
+  { key: "personality_traits", label: { ar: "صفات شخصية", en: "Personality traits" }, type: "text" },
+  { key: "preferred_contact", label: { ar: "طريقة التواصل المفضلة", en: "Preferred contact" }, type: "text" },
+];
 
-const desiredFields = [
-  ["age_min", { ar: "العمر من", en: "Age from" }, "number"],
-  ["age_max", { ar: "العمر إلى", en: "Age to" }, "number"],
-  ["governorates", { ar: "المحافظات", en: "Governorates" }, "text"],
-  ["height_min", { ar: "الطول من", en: "Height from" }, "number"],
-  ["height_max", { ar: "الطول إلى", en: "Height to" }, "number"],
-  ["education", { ar: "التعليم", en: "Education" }, "text"],
-  ["occupation", { ar: "المهنة", en: "Occupation" }, "text"],
-  ["marital_status", { ar: "الحالة الاجتماعية", en: "Marital status" }, "text"],
-  ["religious_preference", { ar: "الدين", en: "Religion" }, "text"],
-  ["hijab_status", { ar: "اللباس", en: "Dress style" }, "text"],
-  ["other_criteria", { ar: "تفاصيل أخرى", en: "Other details" }, "text"],
-] as const;
+const desiredFields: FieldRow[] = [
+  { key: "marital_status", label: { ar: "الحالة الاجتماعية", en: "Marital status" }, type: "select", group: "maritalPreference" },
+  { key: "age_min", label: { ar: "العمر من", en: "Age from" }, type: "number", unit: "age" },
+  { key: "age_max", label: { ar: "العمر إلى", en: "Age to" }, type: "number", unit: "age" },
+  { key: "preferred_origin", label: { ar: "المحافظة الأصلية المفضلة", en: "Preferred original governorate" }, type: "select", group: "preferenceGovernorate" },
+  { key: "governorates", label: { ar: "محافظة الإقامة", en: "Residence governorate" }, type: "multi-select", group: "preferenceGovernorate" },
+  { key: "height_min", label: { ar: "الطول من", en: "Height from" }, type: "number", unit: "height" },
+  { key: "height_max", label: { ar: "الطول إلى", en: "Height to" }, type: "number", unit: "height" },
+  { key: "education", label: { ar: "التعليم", en: "Education" }, type: "select", group: "education" },
+  { key: "occupation", label: { ar: "المهنة", en: "Occupation" }, type: "select", group: "occupationPreference" },
+  { key: "profession_preference", label: { ar: "تفضيل العمل", en: "Work preference" }, type: "select", group: "occupationPreference" },
+  { key: "children", label: { ar: "الأطفال", en: "Children" }, type: "text" },
+  { key: "children_preference", label: { ar: "تفضيل الأطفال", en: "Children preference" }, type: "text" },
+  { key: "religious_preference", label: { ar: "الدين", en: "Religion" }, type: "select", group: "religion" },
+  { key: "values", label: { ar: "درجة الالتزام", en: "Religious commitment" }, type: "multi-select", group: "commitmentPreference" },
+  { key: "hijab_status", label: { ar: "اللباس", en: "Dress style" }, type: "select", group: "hijab" },
+  { key: "traits", label: { ar: "صفات إضافية", en: "Additional traits" }, type: "text" },
+  { key: "personality_traits", label: { ar: "صفات شخصية", en: "Personality traits" }, type: "text" },
+  { key: "other_criteria", label: { ar: "المواصفات الإضافية", en: "Additional details" }, type: "text" },
+];
 
 const text = {
   ar: {
@@ -85,10 +105,38 @@ const text = {
   },
 };
 
-function displayValue(value: unknown, language: "ar" | "en") {
-  if (Array.isArray(value)) return value.map((item) => governorateLabel(String(item), language)).join(language === "ar" ? "، " : ", ");
-  if (typeof value === "string") return governorateLabel(localizeBusinessValue(value, language), language);
-  return localizeBusinessValue(value, language);
+function extractPreferredOrigin(otherCriteria: unknown) {
+  if (typeof otherCriteria !== "string") return undefined;
+  return otherCriteria.match(/(?:^|\s)preferred_origin:([A-Z_]+)/)?.[1];
+}
+
+function withoutPreferredOrigin(otherCriteria: unknown) {
+  if (typeof otherCriteria !== "string") return otherCriteria;
+  return otherCriteria.replace(/(?:^|\s)preferred_origin:[A-Z_]+/g, "").trim() || undefined;
+}
+
+function withPreferredOrigin(otherCriteria: unknown, origin: unknown) {
+  const cleaned = withoutPreferredOrigin(otherCriteria);
+  if (!origin || origin === "NO_PREFERENCE") return cleaned;
+  return [cleaned, `preferred_origin:${origin}`].filter(Boolean).join(" ");
+}
+
+function valueForField(source: Record<string, unknown>, key: string) {
+  if (key === "preferred_origin") return extractPreferredOrigin(source.other_criteria);
+  if (key === "other_criteria") return withoutPreferredOrigin(source.other_criteria);
+  return source[key];
+}
+
+function formatUnit(value: unknown, unit: FieldRow["unit"], language: "ar" | "en") {
+  if (value === undefined || value === null || value === "") return notSpecified[language];
+  const suffix = unit === "age" ? (language === "ar" ? " سنة" : " years") : (language === "ar" ? " سم" : " cm");
+  return `${value}${suffix}`;
+}
+
+function displayValue(value: unknown, field: FieldRow, language: "ar" | "en") {
+  if (field.unit) return formatUnit(value, field.unit, language);
+  if (field.group) return localizeDomainValue(value, language, field.group);
+  return localizeDomainValue(value, language);
 }
 
 function editValue(value: unknown) {
@@ -97,11 +145,15 @@ function editValue(value: unknown) {
   return String(value);
 }
 
-function coerceValue(raw: string, type: string, current: unknown) {
+function coerceValue(raw: string, field: FieldRow, current: unknown) {
   const value = raw.trim();
-  if (Array.isArray(current)) return value ? value.split(/[,،]/).map((item) => item.trim()).filter(Boolean) : [];
-  if (type === "number") return value ? Number(value) : undefined;
+  if (field.type === "multi-select" || Array.isArray(current)) return value ? value.split(/[,،]/).map((item) => item.trim()).filter(Boolean) : [];
+  if (field.type === "number") return value ? Number(value) : undefined;
   return value || undefined;
+}
+
+function optionsFor(field: FieldRow): DomainOption[] {
+  return field.group ? domainOptions[field.group] : [];
 }
 
 function RequestEditList({
@@ -124,11 +176,15 @@ function RequestEditList({
   const source = (data[section] || {}) as Record<string, unknown>;
   const begin = (field: string) => {
     setEditing(field);
-    setValue(editValue(source[field]));
+    setValue(editValue(valueForField(source, field)));
   };
   const save = async (field: FieldRow) => {
-    const [key, , type] = field;
-    await onSave(section, { ...source, [key]: coerceValue(value, type, source[key]) });
+    const { key } = field;
+    const nextValue = coerceValue(value, field, valueForField(source, key));
+    const next = key === "preferred_origin"
+      ? { ...source, other_criteria: withPreferredOrigin(source.other_criteria, nextValue) }
+      : { ...source, [key]: nextValue };
+    await onSave(section, next);
     setEditing(null);
     setValue("");
   };
@@ -138,17 +194,36 @@ function RequestEditList({
       <h2 className="text-lg font-bold text-slate-900">{title}</h2>
       <div className="mt-4 divide-y">
         {fields.map((field) => {
-          const [key, labelMap, type] = field;
+          const { key, label: labelMap, type } = field;
           const isEditing = editing === key;
+          const currentValue = valueForField(source, key);
           return (
             <div key={key} className="py-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-slate-500">{labelMap[language]}</p>
                   {isEditing ? (
-                    <input className="field mt-2" dir={type === "number" ? "ltr" : dir} inputMode={type === "number" ? "numeric" : "text"} value={value} onChange={(event) => setValue(event.target.value)} />
+                    type === "select" || type === "multi-select" ? (
+                      <select
+                        className="field mt-2 min-h-11 max-w-full"
+                        dir={dir}
+                        multiple={type === "multi-select"}
+                        value={type === "multi-select" ? value.split(", ").filter(Boolean) : value}
+                        onChange={(event) => {
+                          const selected = Array.from(event.currentTarget.selectedOptions).map((item) => item.value);
+                          setValue(type === "multi-select" ? selected.join(", ") : selected[0] || "");
+                        }}
+                      >
+                        {type === "select" && <option value="">{notSpecified[language]}</option>}
+                        {optionsFor(field).map((item) => (
+                          <option key={item.value} value={item.value}>{item[language]}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input className="field mt-2" dir={type === "number" ? "ltr" : dir} inputMode={type === "number" ? "numeric" : "text"} value={value} onChange={(event) => setValue(event.target.value)} />
+                    )
                   ) : (
-                    <p className="mt-1 break-words font-medium text-slate-900">{displayValue(source[key], language)}</p>
+                    <p className="mt-1 break-words font-medium text-slate-900">{displayValue(currentValue, field, language)}</p>
                   )}
                 </div>
                 {isEditing ? (

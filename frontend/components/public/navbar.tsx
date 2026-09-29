@@ -10,11 +10,11 @@ export function Navbar() {
   const { language, toggleLanguage, toggleTheme, isDark } = usePreferences();
   const themeLabel = language === "ar" ? "تغيير المظهر" : "Change theme";
   const buttonClass = isDark
-    ? "border-[#4A2134] bg-[#2B1421] text-[#FF6F9C] hover:bg-[#3A1730] hover:text-[#FF8CB1]"
-    : "border-[#f1d9e1] bg-white text-[#a92850] hover:bg-[#fff6f9]";
+    ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C] hover:text-[#E8BDD0]"
+    : "border-[#E6D7E0] bg-white text-[#6E3357] hover:bg-[#F3E6EC]";
 
   return (
-    <header className={`relative z-30 border-b backdrop-blur ${isDark ? "border-[#4A2134] bg-[#21101A]/95" : "border-rose-100/60 bg-brand-paper/90"}`}>
+    <header className={`relative z-30 border-b backdrop-blur ${isDark ? "border-[#4A3040] bg-[#21121E]/95" : "border-brand-pink bg-brand-paper/90"}`}>
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Logo />
         <div className="flex items-center gap-2" dir="ltr">

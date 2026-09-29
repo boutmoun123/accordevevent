@@ -1,7 +1,8 @@
 "use client";
 
-import { Bot, Check, ChevronRight, LoaderCircle, LockKeyhole, LogIn, Moon, Pencil, RotateCcw, Sun, UserRound, X } from "lucide-react";
+import { Bot, Check, ChevronRight, LoaderCircle, LockKeyhole, Moon, Pencil, RotateCcw, Sun, UserRound, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Logo } from "@/components/brand/logo";
@@ -11,6 +12,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { Button } from "@/components/ui/button";
 import { LoadingState } from "@/components/ui/feedback";
+import { localizeDisplayValue, type DomainOptionGroup, type DisplayRangeUnit } from "@/lib/domain-options";
 import { governorateOptions, languageLabel } from "@/lib/i18n";
 import { api } from "@/services/api";
 import type { MalePhoneChallenge, MaleRequest } from "@/types";
@@ -27,7 +29,7 @@ type Step = {
   quick?: Quick[];
   optional?: boolean;
 };
-type Message = { id: string; role: "assistant" | "user"; content: string; hint?: string; quick?: Quick[]; stepId?: string; edited?: boolean; value?: string; kind?: "phone" };
+type Message = { id: string; role: "assistant" | "user"; content: string; hint?: string; quick?: Quick[]; stepId?: string; edited?: boolean; value?: string; kind?: "phone" | "existing-request" };
 
 const q = (value: string, ar: string, en: string): Quick => ({ value, label: { ar, en } });
 const choice = {
@@ -36,6 +38,19 @@ const choice = {
   yes: q("YES", "نعم", "Yes"),
   no: q("NO", "لا", "No"),
 };
+const existingRequestQuestion: Localized = {
+  ar: "هل لديك طلب مسبق؟",
+  en: "Do you already have a request?",
+};
+const existingRequestHint: Localized = {
+  ar: "إذا كان لديك رقم طلب سابق يمكنك إدخاله مباشرة.",
+  en: "If you already have a request code, you can enter it directly.",
+};
+const existingRequestQuick = [
+  q("EXISTING_NO", "لا", "No"),
+  q("EXISTING_YES", "نعم", "Yes"),
+];
+
 const ageQuick = [
   q("18-25", "18-25", "18-25"),
   q("26-30", "26-30", "26-30"),
@@ -46,7 +61,7 @@ const ageQuick = [
   q("OVER_50", "أكثر من 50", "Over 50"),
   choice.noPreference,
 ];
-const governorateQuick = governorateOptions.slice(0, 8).map((item) => q(item.value, item.ar, item.en));
+const governorateQuick = governorateOptions.map((item) => q(item.value, item.ar, item.en));
 
 const steps: Step[] = [
   { id: "preferred_marital_status", section: "desired", field: "marital_status", question: { ar: "ما الحالة الاجتماعية المقبولة لديك؟", en: "What marital status would you prefer?" }, hint: { ar: "اختر الحالات المقبولة لديك، ويمكنك اختيار لا يهم.", en: "Choose acceptable statuses, or choose no preference." }, quick: [q("SINGLE", "عزباء", "Single"), q("DIVORCED", "منفصلة", "Divorced"), q("WIDOWED", "أرملة", "Widowed"), q("DIVORCED_OR_WIDOWED", "منفصلة أو أرملة", "Divorced or widowed"), choice.noPreference] },
@@ -99,8 +114,45 @@ function uuid() {
 function label(value: Localized, language: "ar" | "en") {
   return value[language];
 }
+function optionGroupForStep(step: Step): DomainOptionGroup | undefined {
+  if (step.field === "education") return "education";
+  if (step.field === "financial_status") return "financial";
+  if (step.field === "religion") return "religion";
+  if (step.field === "commitment") return step.section === "desired" ? "commitmentPreference" : "commitmentMale";
+  if (step.field === "smoking") return "smoking";
+  if (step.field === "children") return step.section === "desired" ? "childrenPreference" : "childrenSelf";
+  if (step.field === "hijab") return "hijab";
+  if (step.field === "work_after_marriage") return "workAfterMarriage";
+  if (step.field === "marital_status") return step.section === "desired" ? "maritalPreference" : "maritalMale";
+  if (step.field === "occupation") return step.section === "desired" ? "occupationPreference" : "occupationMale";
+  if (step.field === "origin" || step.field === "residence") {
+    return step.section === "desired" ? "preferenceGovernorate" : "governorate";
+  }
+  return undefined;
+}
+function rangeUnitForStep(step: Step): DisplayRangeUnit | undefined {
+  if (step.field === "age") return "years";
+  if (step.field === "height") return "centimeters";
+  return undefined;
+}
+function displayAnswer(step: Step, value: string, language: "ar" | "en") {
+  return localizeDisplayValue(value, language, {
+    group: optionGroupForStep(step),
+    rangeUnit: rangeUnitForStep(step),
+  });
+}
 function displayQuestion(step: Step, language: "ar" | "en"): Message {
   return { id: uuid(), role: "assistant", content: label(step.question, language), hint: label(step.hint, language), quick: step.quick };
+}
+function displayExistingRequestQuestion(language: "ar" | "en"): Message {
+  return {
+    id: uuid(),
+    role: "assistant",
+    content: label(existingRequestQuestion, language),
+    hint: label(existingRequestHint, language),
+    quick: existingRequestQuick,
+    kind: "existing-request",
+  };
 }
 function rangeFromText(text: string, fallback?: [number, number]) {
   if (rangeMap[text]) return rangeMap[text];
@@ -166,10 +218,12 @@ function buildPayload(self: Record<string, string>, desired: Record<string, stri
 }
 
 export default function ChatPage() {
+  const router = useRouter();
   const { loading: authLoading, refresh } = useAuth();
   const { dir, isDark, language, toggleLanguage, toggleTheme } = usePreferences();
   const text = chatText[language];
-  const [messages, setMessages] = useState<Message[]>(() => [displayQuestion(steps[0], language)]);
+  const [existingRequestAnswered, setExistingRequestAnswered] = useState(false);
+  const [messages, setMessages] = useState<Message[]>(() => [displayExistingRequestQuestion(language)]);
   const [input, setInput] = useState("");
   const [stepIndex, setStepIndex] = useState(0);
   const [desired, setDesired] = useState<Record<string, string>>({});
@@ -180,11 +234,11 @@ export default function ChatPage() {
   const [phoneStage, setPhoneStage] = useState<"none" | "phone" | "otp" | "verified">("none");
   const [busy, setBusy] = useState(false);
   const [request, setRequest] = useState<MaleRequest | null>(null);
-  const [editing, setEditing] = useState<{ messageId: string; step: Step; resumeIndex: number } | null>(null);
+  const [editing, setEditing] = useState<{ messageId: string; step: Step; resumeIndex: number; originalValue: string } | null>(null);
   const [editingPhone, setEditingPhone] = useState<{ messageId: string } | null>(null);
   const end = useRef<HTMLDivElement>(null);
   const current = steps[stepIndex];
-  const progress = useMemo(() => Math.round(((stepIndex + 1) / steps.length) * 100), [stepIndex]);
+  const progress = useMemo(() => existingRequestAnswered ? Math.round(((stepIndex + 1) / steps.length) * 100) : 0, [existingRequestAnswered, stepIndex]);
 
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: "smooth" });
@@ -192,9 +246,17 @@ export default function ChatPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Re-label existing assistant messages when the shared language changes.
     setMessages((old) => old.map((message) => {
+      if (message.role === "assistant" && message.kind === "existing-request") {
+        const next = displayExistingRequestQuestion(language);
+        return { ...message, content: next.content, hint: next.hint, quick: next.quick };
+      }
       if (message.role === "assistant" && message.stepId) {
         const step = steps.find((item) => item.id === message.stepId);
         return step ? { ...message, content: label(step.question, language), hint: label(step.hint, language), quick: step.quick } : message;
+      }
+      if (message.role === "user" && message.stepId && message.value) {
+        const step = steps.find((item) => item.id === message.stepId);
+        return step ? { ...message, content: displayAnswer(step, message.value, language) } : message;
       }
       return message;
     }));
@@ -209,9 +271,9 @@ export default function ChatPage() {
   const beginEdit = (message: Message) => {
     const step = steps.find((item) => item.id === message.stepId);
     if (!step || busy) return;
-    setEditing({ messageId: message.id, step, resumeIndex: stepIndex });
-    setInput(message.value || message.content);
-    append([{ ...displayQuestion(step, language), hint: text.editHint }]);
+    const originalValue = message.value || message.content;
+    setEditing({ messageId: message.id, step, resumeIndex: stepIndex, originalValue });
+    setInput(displayAnswer(step, originalValue, language));
   };
   const beginPhoneEdit = (message: Message) => {
     if (busy) return;
@@ -250,19 +312,24 @@ export default function ChatPage() {
   };
   const saveEdit = async (answer: string) => {
     if (!editing) return;
-    const editedValue = answer.trim();
-    if (!editedValue || busy) return;
-    const { step, messageId, resumeIndex } = editing;
+    const rawEditedValue = answer.trim();
+    if (!rawEditedValue || busy) return;
+    const { step, messageId, resumeIndex, originalValue } = editing;
+    const editedValue = rawEditedValue === displayAnswer(step, originalValue, language) ? originalValue : rawEditedValue;
     setInput("");
     setEditing(null);
     saveAnswer(step, editedValue);
     setStepIndex(resumeIndex);
-    setMessages((old) => old.map((message) => (message.id === messageId ? { ...message, content: editedValue, value: editedValue, edited: true } : message)));
+    setMessages((old) => old.map((message) => (
+      message.id === messageId
+        ? { ...message, content: displayAnswer(step, editedValue, language), value: editedValue, edited: true }
+        : message
+    )));
     toast.success(text.saved);
   };
-  const advance = async (answer: string, displayAnswer = answer) => {
+  const advance = async (answer: string, displayText = answer) => {
     const value = answer.trim();
-    const display = displayAnswer.trim();
+    const display = displayText.trim();
     if (!value || busy || !current) return;
     if (editingPhone) {
       await savePhoneEdit(value);
@@ -272,8 +339,20 @@ export default function ChatPage() {
       await saveEdit(value);
       return;
     }
+    if (!existingRequestAnswered) {
+      setInput("");
+      append([{ id: uuid(), role: "user", content: display || value, value }]);
+      const normalizedExistingAnswer = value.toLowerCase();
+      if (value === "EXISTING_YES" || normalizedExistingAnswer === "yes" || value === "نعم") {
+        router.push("/auth/login");
+        return;
+      }
+      setExistingRequestAnswered(true);
+      append([{ ...displayQuestion(steps[0], language), stepId: steps[0].id }]);
+      return;
+    }
     setInput("");
-    append([{ id: uuid(), role: "user", content: display, value, stepId: current.id }]);
+    append([{ id: uuid(), role: "user", content: displayAnswer(current, display || value, language), value, stepId: current.id }]);
     saveAnswer(current, value);
     const nextIndex = stepIndex + 1;
     if (nextIndex === 13 && phoneStage === "none") {
@@ -337,7 +416,8 @@ export default function ChatPage() {
     }
   };
   const reset = () => {
-    setMessages([{ ...displayQuestion(steps[0], language), stepId: steps[0].id }]);
+    setExistingRequestAnswered(false);
+    setMessages([displayExistingRequestQuestion(language)]);
     setStepIndex(0);
     setDesired({});
     setSelf({});
@@ -363,67 +443,78 @@ export default function ChatPage() {
   }
 
   return (
-    <main dir={dir} className={`flex min-h-[100dvh] flex-col transition-colors ${isDark ? "bg-[#180B13] text-[#FFF7FA]" : "bg-[#faf9f8] text-[#111936]"}`}>
-      <header className={`sticky top-0 z-20 border-b backdrop-blur ${isDark ? "border-[#4A2134] bg-[#21101A]/95" : "bg-white/90"}`}>
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" aria-label={language === "ar" ? "العودة" : "Back"}><ChevronRight className={dir === "ltr" ? "rotate-180" : ""} /></Link>
-            <Logo />
+    <main dir={dir} className={`flex min-h-[100dvh] flex-col transition-colors ${isDark ? "bg-[#1A1018] text-[#FFF8FB]" : "bg-[#FAF5F8] text-[#1F1630]"}`}>
+      <header className={`sticky top-0 z-20 border-b backdrop-blur ${isDark ? "border-[#4A3040] bg-[#21121E]/95" : "bg-white/90"}`}>
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:flex-nowrap">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+            <Link href="/" aria-label={language === "ar" ? "العودة" : "Back"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-slate-100"><ChevronRight className={dir === "ltr" ? "rotate-180" : ""} /></Link>
+            <Logo className="min-w-0 scale-90 origin-right sm:scale-100 [&_small]:hidden sm:[&_small]:inline [&_span]:min-w-0" />
           </div>
-          <div className="flex items-center gap-2" dir="ltr">
-            <Button type="button" size="sm" variant="outline" className={`h-9 ${isDark ? "border-[#4A2134] bg-[#2B1421] text-[#FF6F9C] hover:bg-[#3A1730]" : ""}`} onClick={toggleLanguage}>{languageLabel[language]}</Button>
-            <Button type="button" size="icon" variant="outline" className={`h-9 w-9 ${isDark ? "border-[#4A2134] bg-[#2B1421] text-[#FF6F9C] hover:bg-[#3A1730]" : ""}`} onClick={toggleTheme} aria-label={isDark ? "Light mode" : "Dark mode"}>{isDark ? <Moon size={15} /> : <Sun size={15} />}</Button>
-            <Button asChild size="sm" variant="outline" className={`h-9 ${isDark ? "border-[#4A2134] bg-[#2B1421] text-[#FF6F9C] hover:bg-[#3A1730]" : ""}`}><Link href="/auth/login"><LogIn size={15} /> {text.login}</Link></Button>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2" dir="ltr">
+            <Button type="button" size="sm" variant="outline" className={`h-9 ${isDark ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C]" : ""}`} onClick={toggleLanguage}>{languageLabel[language]}</Button>
+            <Button type="button" size="icon" variant="outline" className={`h-9 w-9 ${isDark ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C]" : ""}`} onClick={toggleTheme} aria-label={isDark ? "Light mode" : "Dark mode"}>{isDark ? <Moon size={15} /> : <Sun size={15} />}</Button>
             <span className="hidden items-center gap-1.5 text-xs text-green-700 sm:flex"><LockKeyhole size={14} /> {text.privateChat}</span>
           </div>
         </div>
       </header>
-      <div className={`mx-auto mt-4 h-2 w-full max-w-3xl overflow-hidden rounded-full ${isDark ? "bg-[#2B1421]" : "bg-slate-200"}`}><div className="h-full bg-brand-rose transition-all" style={{ width: `${progress}%` }} /></div>
+      <div className={`mx-auto mt-4 h-2 w-full max-w-3xl overflow-hidden rounded-full ${isDark ? "bg-[#261722]" : "bg-[#F3E6EC]"}`}><div className="h-full bg-brand-rose transition-all" style={{ width: `${progress}%` }} /></div>
       <section className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 pb-52">
         <div className="space-y-6">
           {messages.map((message) => (
             <div key={message.id} className={`group flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
               <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${message.role === "assistant" ? "bg-brand-rose text-white" : "bg-brand-navy text-white"}`}>{message.role === "assistant" ? <Bot size={18} /> : <UserRound size={18} />}</div>
-              <div className={`max-w-[84%] rounded-2xl px-4 py-3 leading-7 ${message.role === "assistant" ? (isDark ? "rounded-tr-sm border border-[#4A2134] bg-[#21101A] text-[#FFF7FA]" : "rounded-tr-sm border bg-white") : "rounded-tl-sm bg-brand-navy text-white"}`}>
+              <div className={`max-w-[84%] rounded-2xl px-4 py-3 leading-7 ${message.role === "assistant" ? (isDark ? "rounded-tr-sm border border-[#4A3040] bg-[#21121E] text-[#FFF8FB]" : "rounded-tr-sm border bg-white") : "rounded-tl-sm bg-brand-navy text-white"}`}>
                 <div className="flex items-start gap-2">
                   <p className="min-w-0 flex-1">{message.content}</p>
                   {message.role === "user" && (message.stepId || message.kind === "phone") && <button type="button" aria-label={text.edit} title={text.edit} onClick={() => message.kind === "phone" ? beginPhoneEdit(message) : beginEdit(message)} className="shrink-0 rounded-full p-1 text-white/70 transition hover:bg-white/10 hover:text-white"><Pencil size={14} /></button>}
                 </div>
                 {message.edited && <p className="mt-1 text-[11px] text-white/60">{text.edited}</p>}
-                {message.hint && <p className={`mt-2 text-sm ${isDark ? "text-[#C9A8B5]" : "text-slate-400"}`}>{message.hint}</p>}
-                {message.quick && message.id === messages[messages.length - 1]?.id && phoneStage !== "phone" && phoneStage !== "otp" && (
+                {message.hint && <p className={`mt-2 text-sm ${isDark ? "text-[#CDB7C3]" : "text-slate-400"}`}>{message.hint}</p>}
+                {message.quick && message.id === messages[messages.length - 1]?.id && phoneStage !== "phone" && phoneStage !== "otp" && !editing && !editingPhone && (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {message.quick.map((quick) => <button key={quick.value} type="button" onClick={() => void advance(quick.value, quick.label[language])} className={`rounded-full border px-3 py-1.5 text-xs hover:border-brand-rose ${isDark ? "border-[#4A2134] bg-[#2B1421] text-[#E8D7DE]" : "bg-white text-slate-600"}`}>{quick.label[language]}</button>)}
+                    {message.quick.map((quick) => <button key={quick.value} type="button" onClick={() => void advance(quick.value, quick.label[language])} className={`rounded-full border px-3 py-1.5 text-xs hover:border-brand-rose ${isDark ? "border-[#4A3040] bg-[#261722] text-[#E8BDD0]" : "bg-white text-slate-600"}`}>{quick.label[language]}</button>)}
                   </div>
                 )}
               </div>
             </div>
           ))}
-          {busy && <div className={`flex items-center gap-3 text-sm ${isDark ? "text-[#C9A8B5]" : "text-slate-400"}`}><LoaderCircle className="animate-spin" size={18} /> {text.saving}</div>}
+          {busy && <div className={`flex items-center gap-3 text-sm ${isDark ? "text-[#CDB7C3]" : "text-slate-400"}`}><LoaderCircle className="animate-spin" size={18} /> {text.saving}</div>}
           <div ref={end} />
         </div>
       </section>
-      <div className={`fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t px-4 pb-4 pt-10 ${isDark ? "from-[#180B13] via-[#180B13] to-transparent" : "from-[#faf9f8] via-[#faf9f8] to-transparent"}`}>
+      <div className={`fixed inset-x-0 bottom-0 z-20 bg-gradient-to-t px-4 pb-4 pt-10 ${isDark ? "from-[#1A1018] via-[#1A1018] to-transparent" : "from-[#FAF5F8] via-[#FAF5F8] to-transparent"}`}>
         <div className="mx-auto max-w-3xl">
           {phoneStage === "phone" ? (
-            <div className={`rounded-2xl border p-3 shadow-soft ${isDark ? "border-[#4A2134] bg-[#21101A]" : "bg-white"}`}>
+            <div className={`rounded-2xl border p-3 shadow-soft ${isDark ? "border-[#4A3040] bg-[#21121E]" : "bg-white"}`}>
               <input dir="ltr" inputMode="tel" className="field" placeholder="09xxxxxxxx" value={phone} onChange={(event) => setPhone(event.target.value)} />
               <Button className="mt-3 w-full" disabled={busy} onClick={startOtp}>{language === "ar" ? "متابعة" : "Continue"}</Button>
             </div>
           ) : phoneStage === "otp" ? (
-            <div className={`rounded-2xl border p-3 shadow-soft ${isDark ? "border-[#4A2134] bg-[#21101A]" : "bg-white"}`}>
+            <div className={`rounded-2xl border p-3 shadow-soft ${isDark ? "border-[#4A3040] bg-[#21121E]" : "bg-white"}`}>
               <input dir="ltr" inputMode="numeric" className="field text-center font-mono text-xl tracking-[0.35em]" value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, ""))} />
               <Button className="mt-3 w-full" disabled={busy} onClick={verifyOtp}>{text.verifyContinue}</Button>
             </div>
           ) : (
             <div>
-              {(editing || editingPhone) && <div className={`mb-2 flex items-center justify-between rounded-xl border px-3 py-2 text-sm shadow-soft ${isDark ? "border-[#4A2134] bg-[#21101A]" : "bg-white"}`}><span className={isDark ? "text-[#E8D7DE]" : "text-slate-600"}>{text.editMode}</span><button type="button" onClick={cancelEdit} className={`rounded-full p-1 ${isDark ? "text-[#C9A8B5] hover:bg-[#2B1421] hover:text-white" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"}`} aria-label={text.cancel}><X size={16} /></button></div>}
+              {(editing || editingPhone) && <div className={`mb-2 rounded-xl border px-3 py-2 text-sm shadow-soft ${isDark ? "border-[#4A3040] bg-[#21121E]" : "bg-white"}`}>
+                <div className="flex items-center justify-between">
+                  <span className={isDark ? "text-[#E8BDD0]" : "text-slate-600"}>{text.editMode}</span>
+                  <button type="button" onClick={cancelEdit} className={`rounded-full p-1 ${isDark ? "text-[#CDB7C3] hover:bg-[#261722] hover:text-white" : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"}`} aria-label={text.cancel}><X size={16} /></button>
+                </div>
+                {editing?.step.quick && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {editing.step.quick.map((quick) => (
+                      <button key={quick.value} type="button" onClick={() => void saveEdit(quick.value)} className={`rounded-full border px-3 py-1.5 text-xs hover:border-brand-rose ${isDark ? "border-[#4A3040] bg-[#261722] text-[#E8BDD0]" : "bg-white text-slate-600"}`}>{quick.label[language]}</button>
+                    ))}
+                  </div>
+                )}
+              </div>}
               <ChatComposer value={input} onChange={setInput} onSend={() => void advance(input)} disabled={busy || Boolean(request)} dir={dir} placeholder={editingPhone ? "09xxxxxxxx" : text.placeholder} />
               {editing && <Button className="mt-2 w-full" disabled={busy} onClick={() => void saveEdit(input)}><Check size={16} /> {text.saveEdit}</Button>}
               {editingPhone && <Button className="mt-2 w-full" disabled={busy} onClick={() => void savePhoneEdit(input)}><Check size={16} /> {text.saveEdit}</Button>}
             </div>
           )}
-          <p className={`mt-2 text-center text-[11px] ${isDark ? "text-[#8F7783]" : "text-slate-400"}`}>{text.composerHint}</p>
+          <p className={`mt-2 text-center text-[11px] ${isDark ? "text-[#CDB7C3]" : "text-slate-400"}`}>{text.composerHint}</p>
         </div>
       </div>
     </main>

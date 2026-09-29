@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Circle, FileText, MessageCircle, Settings2, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Circle, FileText, MessageCircle, Settings2, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { GenderIcon } from "@/components/brand/gender-icon";
 import { Navbar } from "@/components/public/navbar";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { Modal } from "@/components/ui/modal";
@@ -55,7 +56,7 @@ const pageText = {
   ar: {
     welcome: "أول خطّابة بالذكاء الاصطناعي في العالم",
     title: "اختر شريك حياتك بهوية مخفية وبمساعدة AI، حتى يحين دور الأهل",
-    subtitle: "رحلة خاصة ومنظمة من التسجيل حتى التواصل الجاد بين الأهل.",
+    subtitle: "",
     male: "أنا شاب",
     maleSub: "أبحث عن شريكة حياة مناسبة",
     female: "أنا فتاة",
@@ -67,7 +68,7 @@ const pageText = {
   en: {
     welcome: "The world's first AI matchmaker",
     title: "Choose your life partner with a hidden identity and AI support until it is time for families to get involved",
-    subtitle: "A private, guided journey from registration to serious family communication.",
+    subtitle: "",
     male: "I am a man",
     maleSub: "I am looking for a suitable life partner",
     female: "I am a woman",
@@ -94,39 +95,47 @@ export default function Home() {
   };
 
   return (
-    <main dir={dir} className={`min-h-screen overflow-x-hidden transition-colors ${dark ? "bg-[#180B13] text-[#FFF7FA]" : "bg-[#fffdfd] text-[#111936]"}`}>
+    <main dir={dir} className={`min-h-screen overflow-x-hidden transition-colors ${dark ? "bg-[#1A1018] text-[#FFF8FB]" : "bg-[#FAF5F8] text-[#1F1630]"}`}>
       <Navbar />
-      <section className="relative flex min-h-[calc(100vh-80px)] items-center px-4 py-5 sm:px-6 lg:px-8">
-        <div className={`pointer-events-none absolute inset-x-0 top-20 mx-auto rounded-full blur-2xl ${dark ? "h-28 max-w-[220px] bg-[rgba(217,31,99,0.10)]" : "h-48 max-w-3xl bg-[#fff0f4]"}`} />
+      <section className="relative flex min-h-[calc(100vh-80px)] items-start px-4 py-6 sm:items-center sm:px-6 lg:px-8">
+        <div className={`pointer-events-none absolute inset-x-0 top-20 mx-auto rounded-full blur-2xl ${dark ? "h-28 max-w-[220px] bg-[rgba(201,122,161,0.12)]" : "h-48 max-w-3xl bg-[#F3E6EC]"}`} />
         <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center text-center">
-          <Image src="/logo.png" alt="Farah" width={120} height={120} priority className="mb-3 h-[110px] w-[110px] object-contain sm:h-[120px] sm:w-[120px]" />
-          <p className={`mb-1.5 text-sm font-semibold sm:text-base ${dark ? "text-[#FF6F9C]" : "text-[#d92d62]"}`}>{text.welcome}</p>
-          <h1 className={`text-3xl font-bold tracking-normal sm:text-2xl ${dark ? "text-[#FFF7FA]" : "text-[#111936]"}`}>{text.title}</h1>
-          <p className={`mt-2 text-sm sm:text-base ${dark ? "text-[#C9A8B5]" : "text-slate-500"}`}>{text.subtitle}</p>
-          <div className={`mt-5 grid w-full max-w-[640px] grid-cols-2 gap-2 rounded-[26px] border p-2 shadow-[0_12px_34px_rgba(197,38,84,0.06)] ${dark ? "border-[#4A2134] bg-[#21101A]" : "border-[#f2cfd9] bg-white/80"}`}>
+          <Image
+            src="/logo.png"
+            alt="Farah"
+            width={112}
+            height={112}
+            priority
+            unoptimized
+            className="mb-3 hidden h-24 w-24 object-contain sm:block lg:h-28 lg:w-28"
+          />
+          <p className={`mb-1.5 text-sm font-semibold sm:text-base ${dark ? "text-[#C97AA1]" : "text-[#8E3D6B]"}`}>{text.welcome}</p>
+          <h1 className={`max-w-[22rem] text-[1.55rem] font-bold leading-[1.35] tracking-normal sm:max-w-none sm:text-2xl ${dark ? "text-[#FFF8FB]" : "text-[#1F1630]"}`}>{text.title}</h1>
+          <p className={`mt-2 max-w-[21rem] text-sm leading-6 sm:max-w-none sm:text-base ${dark ? "text-[#CDB7C3]" : "text-slate-500"}`}>{text.subtitle}</p>
+          <div className={`mt-5 grid w-full max-w-[640px] grid-cols-2 gap-2 rounded-[24px] border p-2 shadow-[0_12px_34px_rgba(142,61,107,0.10)] sm:rounded-[26px] ${dark ? "border-[#4A3040] bg-[#21121E]" : "border-[#E6D7E0] bg-white/80"}`}>
             {(["female", "male"] as const).map((value) => (
-              <button key={value} type="button" onClick={() => chooseGender(value)} className={`flex min-h-[78px] items-center justify-between gap-3 rounded-[20px] border px-4 text-start transition-colors ${gender === value ? (dark ? "border-[#D91F63] bg-[#2B1421]" : "border-[#e77d9c] bg-[#fff1f5]") : dark ? "border-[#4A2134] bg-[#21101A] hover:border-[#D91F63]" : "border-[#f4dce4] bg-white hover:border-[#efb6c8]"}`}>
+              <button key={value} type="button" onClick={() => chooseGender(value)} className={`flex min-h-[104px] flex-col-reverse items-center justify-center gap-2 rounded-[18px] border px-3 py-3 text-center transition-colors sm:min-h-[78px] sm:flex-row sm:justify-between sm:gap-3 sm:rounded-[20px] sm:px-4 sm:text-start ${gender === value ? (dark ? "border-[#C97AA1] bg-[#261722]" : "border-[#C97AA1] bg-[#F3E6EC]") : dark ? "border-[#4A3040] bg-[#21121E] hover:border-[#C97AA1]" : "border-[#E6D7E0] bg-white hover:border-[#C97AA1]"}`}>
                 <span>
-                  <span className={`block text-base font-bold sm:text-lg ${gender === value ? (dark ? "text-[#FF6F9C]" : "text-[#c91f55]") : dark ? "text-[#FFF7FA]" : "text-[#111936]"}`}>{value === "female" ? text.female : text.male}</span>
-                  <span className={`mt-1 block text-xs leading-5 sm:text-sm ${gender === value ? (dark ? "text-[#FF6F9C]" : "text-[#d54a73]") : dark ? "text-[#C9A8B5]" : "text-slate-500"}`}>{value === "female" ? text.femaleSub : text.maleSub}</span>
+                  <span className={`block text-base font-bold sm:text-lg ${gender === value ? (dark ? "text-[#C97AA1]" : "text-[#8E3D6B]") : dark ? "text-[#FFF8FB]" : "text-[#1F1630]"}`}>{value === "female" ? text.female : text.male}</span>
+                  <span className={`mt-1 block text-xs leading-5 sm:text-sm ${gender === value ? (dark ? "text-[#C97AA1]" : "text-[#6E3357]") : dark ? "text-[#CDB7C3]" : "text-slate-500"}`}>{value === "female" ? text.femaleSub : text.maleSub}</span>
                 </span>
-                <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${gender === value ? (dark ? "bg-[#3A1730] text-[#FF6F9C]" : "bg-[#fde3eb] text-[#d92d62]") : dark ? "bg-[#2B1421] text-[#C9A8B5]" : "bg-[#f8eef2] text-slate-400"}`}>
-                  <UserRound className="h-5 w-5" />
+                <span className={`grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full sm:h-16 sm:w-16 ${gender === value ? (dark ? "bg-[#30202C]" : "bg-[#F3E6EC]") : dark ? "bg-[#261722]" : "bg-[#F3E6EC]"}`}>
+                  <GenderIcon gender={value} className="h-14 w-14 sm:h-16 sm:w-16" />
                 </span>
               </button>
             ))}
           </div>
-          <div className="mt-5 grid w-full max-w-[640px] grid-cols-2 gap-2">
+          <div className="mt-4 grid w-full max-w-[640px] grid-cols-1 gap-2 sm:mt-5 sm:grid-cols-2">
             {visibleFaqs.map((faq) => {
               const Icon = faq.icon;
               return (
-                <button key={faq.key} type="button" onClick={() => setActiveInfoCard(faq)} className={`group flex min-h-[78px] cursor-pointer items-center justify-between gap-3 rounded-[20px] border px-4 text-start shadow-[0_12px_34px_rgba(197,38,84,0.05)] transition hover:-translate-y-1 ${dark ? "border-[#4A2134] bg-[#21101A] hover:border-[#D91F63]" : "border-[#f2cfd9] bg-white/95 hover:border-[#e99ab2]"}`}>
-                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${dark ? "bg-[#2B1421] text-[#FF6F9C]" : "bg-[#fff0f4] text-[#d92d62]"}`}><Icon className="h-5 w-5" /></span>
+                <button key={faq.key} type="button" onClick={() => setActiveInfoCard(faq)} className={`group flex min-h-[72px] cursor-pointer items-center justify-between gap-3 rounded-[18px] border px-3 text-start shadow-[0_12px_34px_rgba(142,61,107,0.08)] transition hover:-translate-y-1 sm:min-h-[78px] sm:rounded-[20px] sm:px-4 ${dark ? "border-[#4A3040] bg-[#21121E] hover:border-[#C97AA1]" : "border-[#E6D7E0] bg-white/95 hover:border-[#C97AA1]"}`}>
+                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${dark ? "bg-[#261722] text-[#C97AA1]" : "bg-[#F3E6EC] text-[#8E3D6B]"}`}><Icon className="h-5 w-5" /></span>
                   <span className="min-w-0 flex-1">
-                    <span className={`block text-base font-bold sm:text-lg ${dark ? "text-[#FFF7FA]" : "text-[#111936]"}`}>{faq.title[language]}</span>
-                    <span className={`mt-1 block text-xs leading-5 sm:text-sm ${dark ? "text-[#C9A8B5]" : "text-slate-500"}`}>{faq.subtitle[language]}</span>
+                    <span className={`block text-sm font-bold leading-6 sm:text-lg ${dark ? "text-[#FFF8FB]" : "text-[#1F1630]"}`}>{faq.title[language]}</span>
+                    <span className={`mt-0.5 block text-xs leading-5 sm:mt-1 sm:text-sm ${dark ? "text-[#CDB7C3]" : "text-slate-500"}`}>{faq.subtitle[language]}</span>
                   </span>
-                  <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full border ${dark ? "border-[#4A2134] text-[#FF6F9C]" : "border-[#f2cfd9] text-[#c91f55]"}`}><ArrowIcon className="h-4 w-4" /></span>
+                  <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full border sm:h-10 sm:w-10 ${dark ? "border-[#4A3040] text-[#C97AA1]" : "border-[#E6D7E0] text-[#8E3D6B]"}`}><ArrowIcon className="h-4 w-4" /></span>
                 </button>
               );
             })}
@@ -140,7 +149,7 @@ export default function Home() {
       <Modal open={Boolean(activeInfoCard)} onOpenChange={(open) => !open && setActiveInfoCard(null)} title={activeInfoCard ? activeInfoCard.title[language] : ""} dir={dir}>
         {activeInfoCard && (
           <div className="text-start">
-            <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#fff0f4] text-[#d92d62]">
+            <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#F3E6EC] text-[#8E3D6B]">
               <activeInfoCard.icon className="h-7 w-7" />
             </div>
             <div className="space-y-4 text-[15px] leading-8 text-slate-600">

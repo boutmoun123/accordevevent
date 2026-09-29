@@ -42,7 +42,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const { refresh } = useAuth();
   const t = text[language];
-  const muted = isDark ? "text-[#C9A8B5]" : "text-slate-500";
+  const muted = isDark ? "text-[#CDB7C3]" : "text-slate-500";
   const schema = useMemo(
     () => z.string().trim().min(8, t.requestMissing).max(40, t.requestInvalid),
     [t.requestInvalid, t.requestMissing],

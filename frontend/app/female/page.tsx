@@ -147,20 +147,20 @@ export default function FemalePage() {
   };
 
   return (
-    <main dir={dir} className={`min-h-screen px-4 py-8 transition-colors ${isDark ? "bg-[#180B13] text-[#FFF7FA]" : "bg-gradient-to-b from-brand-pink to-brand-paper text-[#111936]"}`}>
+    <main dir={dir} className={`min-h-screen px-4 py-8 transition-colors ${isDark ? "bg-[#1A1018] text-[#FFF8FB]" : "bg-gradient-to-b from-brand-pink to-brand-paper text-[#1F1630]"}`}>
       <div className="mx-auto max-w-2xl">
         <div className="mb-10 flex items-center justify-between">
           <Logo />
-          <Link href="/" className={`flex items-center gap-2 text-sm ${isDark ? "text-[#C9A8B5] hover:text-white" : "text-slate-500"}`}>
+          <Link href="/" className={`flex items-center gap-2 text-sm ${isDark ? "text-[#CDB7C3] hover:text-white" : "text-slate-500"}`}>
             <ArrowIcon size={16} /> {t.home}
           </Link>
         </div>
-        <div className={`rounded-[2rem] p-6 sm:p-10 ${isDark ? "border border-[#4A2134] bg-[#21101A] shadow-[0_20px_60px_rgba(0,0,0,0.22)]" : "glass"}`}>
+        <div className={`rounded-[2rem] p-6 sm:p-10 ${isDark ? "border border-[#4A3040] bg-[#21121E] shadow-[0_20px_60px_rgba(0,0,0,0.22)]" : "glass"}`}>
           {mode === "done" ? (
             <div className="py-12 text-center">
               <CheckCircle2 className="mx-auto text-green-600" size={56} />
               <h1 className="mt-5 text-2xl font-bold">{t.doneTitle}</h1>
-              <p className={`mx-auto mt-3 max-w-md leading-7 ${isDark ? "text-[#E8D7DE]" : "text-slate-500"}`}>{t.doneBody}</p>
+              <p className={`mx-auto mt-3 max-w-md leading-7 ${isDark ? "text-[#E8BDD0]" : "text-slate-500"}`}>{t.doneBody}</p>
               <Button asChild className="mt-7">
                 <Link href="/">{t.backHome}</Link>
               </Button>
@@ -171,7 +171,7 @@ export default function FemalePage() {
                 <LockKeyhole />
               </div>
               <h1 className="mt-6 text-3xl font-bold">{t.introTitle}</h1>
-              <div className={`mt-4 space-y-4 leading-8 ${isDark ? "text-[#E8D7DE]" : "text-slate-600"}`}>
+              <div className={`mt-4 space-y-4 leading-8 ${isDark ? "text-[#E8BDD0]" : "text-slate-600"}`}>
                 {t.introBody.split("\n\n").map((paragraph) => (
                   <p key={paragraph}>{paragraph}</p>
                 ))}
@@ -186,7 +186,7 @@ export default function FemalePage() {
             <form onSubmit={handleSubmit(submit)} className="space-y-4">
               <div>
                 <h1 className="text-2xl font-bold">{t.formTitle}</h1>
-                <p className={`mt-1 text-sm ${isDark ? "text-[#C9A8B5]" : "text-slate-500"}`}>{t.required}</p>
+                <p className={`mt-1 text-sm ${isDark ? "text-[#CDB7C3]" : "text-slate-500"}`}>{t.required}</p>
               </div>
               <div>
                 <label className="label" htmlFor="contact-phone">{t.phone}</label>
@@ -205,7 +205,7 @@ export default function FemalePage() {
               </div>
               <fieldset>
                 <legend className="label">{t.slot}</legend>
-                <p className={`mb-2 text-xs ${isDark ? "text-[#C9A8B5]" : "text-slate-500"}`}>{t.timezone}</p>
+                <p className={`mb-2 text-xs ${isDark ? "text-[#CDB7C3]" : "text-slate-500"}`}>{t.timezone}</p>
                 {loading ? (
                   <p role="status">{t.loadingSlots}</p>
                 ) : loadError ? (
@@ -228,7 +228,7 @@ export default function FemalePage() {
                         </legend>
                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                           {slots.filter((slot) => slot.appointment_date === date).map((slot) => (
-                            <label key={slot.id} className={`cursor-pointer rounded-xl border p-3 has-[:checked]:border-brand-rose ${isDark ? "border-[#4A2134] bg-[#2B1421] text-[#FFF7FA] has-[:checked]:bg-[#3A1730]" : "border-brand-rose/20 bg-white has-[:checked]:bg-brand-pink"}`}>
+                            <label key={slot.id} className={`cursor-pointer rounded-xl border p-3 has-[:checked]:border-brand-rose ${isDark ? "border-[#4A3040] bg-[#261722] text-[#FFF8FB] has-[:checked]:bg-[#30202C]" : "border-brand-rose/20 bg-white has-[:checked]:bg-brand-pink"}`}>
                               <input type="radio" className="mx-2 accent-brand-rose" value={slot.id} {...register("slot_id")} />
                               {new Date(slot.scheduled_at).toLocaleTimeString(language === "ar" ? "ar-SY" : "en-US", {
                                 timeZone: "Asia/Damascus",
@@ -249,7 +249,7 @@ export default function FemalePage() {
                 <label className="label">{t.notes}</label>
                 <textarea rows={3} className="field resize-none" {...register("notes")} />
               </div>
-              <label className={`flex cursor-pointer gap-3 rounded-xl p-4 text-sm leading-6 ${isDark ? "bg-[#2B1421] text-[#E8D7DE]" : "bg-slate-50"}`}>
+              <label className={`flex cursor-pointer gap-3 rounded-xl p-4 text-sm leading-6 ${isDark ? "bg-[#261722] text-[#E8BDD0]" : "bg-slate-50"}`}>
                 <input type="checkbox" className="mt-1 accent-brand-rose" {...register("consent")} />
                 <span>{t.consent}</span>
               </label>

@@ -29,14 +29,14 @@ export default function AuthLayout({
   const t = text[language];
 
   return (
-    <main dir={dir} className={`grid min-h-screen lg:grid-cols-[1fr_1.1fr] ${isDark ? "bg-[#180B13] text-[#FFF7FA]" : "bg-white text-[#111936]"}`}>
+    <main dir={dir} className={`grid min-h-screen lg:grid-cols-[1fr_1.1fr] ${isDark ? "bg-[#1A1018] text-[#FFF8FB]" : "bg-white text-[#1F1630]"}`}>
       <section className="flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           <Logo />
           <div className="mt-10">
             <Suspense fallback={<p>{t.loading}</p>}>{children}</Suspense>
           </div>
-          <Link href="/" className={`mt-8 block text-center text-sm ${isDark ? "text-[#C9A8B5]" : "text-slate-500"}`}>
+          <Link href="/" className={`mt-8 block text-center text-sm ${isDark ? "text-[#CDB7C3]" : "text-slate-500"}`}>
             {t.back}
           </Link>
         </div>

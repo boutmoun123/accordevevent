@@ -1,6 +1,13 @@
 "use client";
 
 import { usePreferences } from "@/components/providers/preferences-provider";
+import {
+  booleanLabels,
+  governorateOptions,
+  labelForOption,
+  localizeDomainValue,
+  type DomainOptionGroup,
+} from "@/lib/domain-options";
 
 export type Language = "ar" | "en";
 export type Localized = Record<Language, string>;
@@ -39,10 +46,7 @@ export const businessLabels = {
     HIJAB: { ar: "محجبة", en: "Hijab" },
     NONE: { ar: "غير محجبة", en: "No hijab" },
   },
-  boolean: {
-    true: { ar: "نعم", en: "Yes" },
-    false: { ar: "لا", en: "No" },
-  },
+  boolean: booleanLabels,
   requestStatus: {
     PENDING: { ar: "قيد المراجعة", en: "Pending review" },
     VERIFIED: { ar: "تم التحقق", en: "Verified" },
@@ -58,26 +62,15 @@ export function localizeBusinessValue(value: unknown, language: Language): strin
   for (const group of Object.values(businessLabels)) {
     if (text in group) return group[text as keyof typeof group][language];
   }
-  return text;
+  return localizeDomainValue(text, language);
 }
 
-export const governorateOptions = [
-  { value: "DAMASCUS", ar: "دمشق", en: "Damascus" },
-  { value: "RIF_DIMASHQ", ar: "ريف دمشق", en: "Rif Dimashq" },
-  { value: "ALEPPO", ar: "حلب", en: "Aleppo" },
-  { value: "HOMS", ar: "حمص", en: "Homs" },
-  { value: "HAMA", ar: "حماة", en: "Hama" },
-  { value: "LATTAKIA", ar: "اللاذقية", en: "Latakia" },
-  { value: "TARTUS", ar: "طرطوس", en: "Tartus" },
-  { value: "DARAA", ar: "درعا", en: "Daraa" },
-  { value: "AS_SUWAYDA", ar: "السويداء", en: "As-Suwayda" },
-  { value: "IDLIB", ar: "إدلب", en: "Idlib" },
-  { value: "DEIR_EZ_ZOR", ar: "دير الزور", en: "Deir ez-Zor" },
-  { value: "AL_HASAKAH", ar: "الحسكة", en: "Al-Hasakah" },
-  { value: "RAQQA", ar: "الرقة", en: "Raqqa" },
-  { value: "OUTSIDE_SYRIA", ar: "خارج سوريا", en: "Outside Syria" },
-] as const;
+export { governorateOptions };
 
 export function governorateLabel(value: string, language: Language) {
-  return governorateOptions.find((item) => item.value === value)?.[language] || value;
+  return labelForOption(value, language, "governorate");
+}
+
+export function domainLabel(value: string, language: Language, group?: DomainOptionGroup) {
+  return labelForOption(value, language, group);
 }

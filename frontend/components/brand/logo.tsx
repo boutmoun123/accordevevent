@@ -1,23 +1,11 @@
 import Link from "next/link";
 import { BrandMark } from "./brand-mark";
-export function Logo({ light = false }: { light?: boolean }) {
+import { cn } from "@/lib/utils";
+
+export function Logo({ className }: { light?: boolean; className?: string }) {
   return (
-    <Link
-      href="/"
-      className="inline-flex items-center gap-2.5"
-      aria-label="فرح - الرئيسية"
-    >
+    <Link href="/" className={cn("inline-flex items-center", className)} aria-label="Farah">
       <BrandMark />
-      <span>
-        <strong
-          className={`block text-xl leading-5 ${light ? "text-white" : "text-brand-navy"}`}
-        >
-          فرح
-        </strong>
-        <small className={light ? "text-white/55" : "text-slate-400"}>
-          Farah.event
-        </small>
-      </span>
     </Link>
   );
 }

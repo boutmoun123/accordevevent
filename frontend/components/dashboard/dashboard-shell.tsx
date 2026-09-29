@@ -89,7 +89,7 @@ export function DashboardShell({
   );
 
   return (
-    <div dir={dir} className="min-h-screen bg-[#f7f7f8]">
+    <div dir={dir} className={`min-h-screen ${isDark ? "bg-[#1A1018] text-[#FFF8FB]" : "bg-[#FAF5F8] text-[#1F1630]"}`}>
       <aside className={`fixed inset-y-0 z-40 hidden w-64 flex-col bg-brand-navy lg:flex ${dir === "rtl" ? "right-0" : "left-0"}`}>
         {sidebar}
       </aside>
@@ -102,28 +102,28 @@ export function DashboardShell({
         </>
       )}
       <div className={dir === "rtl" ? "lg:mr-64" : "lg:ml-64"}>
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b bg-white/90 px-4 backdrop-blur sm:px-7">
+        <header className={`sticky top-0 z-30 flex h-20 items-center justify-between border-b px-4 backdrop-blur sm:px-7 ${isDark ? "border-[#4A3040] bg-[#21121E]/95" : "border-[#E6D7E0] bg-white/90"}`}>
           <div className="flex items-center gap-3">
             <button onClick={() => setOpen(true)} className="rounded-xl border p-2 lg:hidden" aria-label={text.closeMenu}>
               <Menu />
             </button>
             <div>
               <h1 className="font-bold">{title}</h1>
-              <p className="hidden text-xs text-slate-400 sm:block">{text.subtitle}</p>
+              <p className={`hidden text-xs sm:block ${isDark ? "text-[#CDB7C3]" : "text-[#6F5C69]"}`}>{text.subtitle}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={toggleLanguage} className="rounded-xl border px-3 py-2 text-sm font-semibold" dir="ltr">
+            <button type="button" onClick={toggleLanguage} className={`rounded-xl border px-3 py-2 text-sm font-semibold ${isDark ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C]" : "border-[#E6D7E0] bg-white text-[#6E3357] hover:bg-[#F3E6EC]"}`} dir="ltr">
               {languageLabel[language]}
             </button>
-            <button type="button" onClick={toggleTheme} className="rounded-xl border p-2.5" aria-label={isDark ? "Light mode" : "Dark mode"}>
+            <button type="button" onClick={toggleTheme} className={`rounded-xl border p-2.5 ${isDark ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C]" : "border-[#E6D7E0] bg-white text-[#6E3357] hover:bg-[#F3E6EC]"}`} aria-label={isDark ? "Light mode" : "Dark mode"}>
               {isDark ? <Moon size={19} /> : <Sun size={19} />}
             </button>
-            <button className="relative rounded-xl border p-2.5" aria-label={text.notifications}>
+            <button className={`relative rounded-xl border p-2.5 ${isDark ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C]" : "border-[#E6D7E0] bg-white text-[#6E3357] hover:bg-[#F3E6EC]"}`} aria-label={text.notifications}>
               <Bell size={19} />
               <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-brand-rose ring-2 ring-white" />
             </button>
-            <button className="hidden items-center gap-3 rounded-xl border p-2 sm:flex">
+            <button className={`hidden items-center gap-3 rounded-xl border p-2 sm:flex ${isDark ? "border-[#4A3040] bg-[#261722]" : "border-[#E6D7E0] bg-white"}`}>
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-brand-pink text-sm font-bold text-brand-rose">
                 {user?.first_name?.[0] || "F"}
               </div>

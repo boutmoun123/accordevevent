@@ -7,7 +7,7 @@ const styles = cva(
   {
     variants: {
       variant: {
-        primary: "bg-brand-rose text-white shadow-sm hover:bg-[#bc2853]",
+        primary: "bg-brand-rose text-white shadow-sm hover:bg-[#6E3357]",
         secondary: "bg-brand-pink text-brand-rose hover:bg-rose-100",
         outline: "border bg-white hover:bg-slate-50",
         ghost: "hover:bg-slate-100",

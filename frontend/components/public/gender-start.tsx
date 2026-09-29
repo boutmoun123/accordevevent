@@ -1,7 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { useState } from "react";
+import { GenderIcon } from "@/components/brand/gender-icon";
 import { Button } from "@/components/ui/button";
 export function GenderStart() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export function GenderStart() {
           onClick={() => choose("MALE")}
           className="group rounded-2xl border bg-white p-5 text-right shadow-sm transition hover:-translate-y-1 hover:border-brand-rose"
         >
-          <UserRound className="mb-3 text-brand-rose" />
+          <GenderIcon gender="male" className="mb-3 h-12 w-12 sm:h-14 sm:w-14" />
           <strong>أنا شاب</strong>
           <span className="mt-1 block text-xs text-slate-500">
             ابدأ محادثة طلب التوفيق
@@ -28,7 +29,7 @@ export function GenderStart() {
           onClick={() => choose("FEMALE")}
           className="group rounded-2xl border bg-white p-5 text-right shadow-sm transition hover:-translate-y-1 hover:border-brand-rose"
         >
-          <ShieldCheck className="mb-3 text-brand-rose" />
+          <GenderIcon gender="female" className="mb-3 h-12 w-12 sm:h-14 sm:w-14" />
           <strong>أنا فتاة</strong>
           <span className="mt-1 block text-xs text-slate-500">
             تواصلي بخصوصية مع خطّابة

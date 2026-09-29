@@ -6,13 +6,13 @@ export default {
       fontFamily: { sans: ["IBM Plex Sans Arabic", "Tahoma", "sans-serif"] },
       colors: {
         brand: {
-          rose: "#D63362",
-          navy: "#151A2D",
-          pink: "#FFF2F6",
-          paper: "#FFFCFB",
+          rose: "#8E3D6B",
+          navy: "#2A1630",
+          pink: "#F3E6EC",
+          paper: "#FFF9FB",
         },
       },
-      boxShadow: { soft: "0 14px 45px rgba(21,26,45,.08)" },
+      boxShadow: { soft: "0 14px 45px rgba(42,22,48,.08)" },
     },
   },
   plugins: [],
