@@ -66,7 +66,7 @@ export const governorateOptions: DomainOption[] = [
 
 const noPreference = { value: "NO_PREFERENCE", ar: "لا يهم", en: "No preference" };
 
-const options: Record<DomainOptionGroup, DomainOption[]> = {
+const rawOptions: Record<DomainOptionGroup, DomainOption[]> = {
   governorate: governorateOptions,
   preferenceGovernorate: [
     ...governorateOptions,
@@ -208,13 +208,28 @@ const options: Record<DomainOptionGroup, DomainOption[]> = {
   ],
 };
 
-options.occupationPreference = [...options.occupationFemale, noPreference];
-options.commitmentPreference = options.commitmentFemale;
+rawOptions.occupationPreference = [...rawOptions.occupationFemale, noPreference];
+rawOptions.commitmentPreference = rawOptions.commitmentFemale;
 
-export const domainOptions = options;
+function uniqueOptionsByLabel(items: DomainOption[]): DomainOption[] {
+  const seenArabic = new Set<string>();
+  const seenEnglish = new Set<string>();
+  return items.filter((item) => {
+    if (seenArabic.has(item.ar) || seenEnglish.has(item.en)) return false;
+    seenArabic.add(item.ar);
+    seenEnglish.add(item.en);
+    return true;
+  });
+}
+
+export const domainOptions = Object.fromEntries(
+  Object.entries(rawOptions).map(([key, value]) => [key, uniqueOptionsByLabel(value)]),
+) as Record<DomainOptionGroup, DomainOption[]>;
+
+const allOptions = Object.values(rawOptions).flat();
 
 export function labelForOption(value: string, language: Language, group?: DomainOptionGroup): string {
-  const groups = group ? [domainOptions[group]] : Object.values(domainOptions);
+  const groups = group ? [rawOptions[group]] : Object.values(rawOptions);
   const match = groups.flat().find((item) => item.value === value);
   if (match) return match[language];
   if (process.env.NODE_ENV !== "production") {
@@ -234,12 +249,12 @@ export function localizeDomainValue(value: unknown, language: Language, group?: 
 }
 
 function optionLabel(value: string, language: Language, group?: DomainOptionGroup): string | undefined {
-  const groups = group ? [domainOptions[group]] : Object.values(domainOptions);
+  const groups = group ? [rawOptions[group]] : Object.values(rawOptions);
   return groups.flat().find((item) => item.value === value)?.[language];
 }
 
 function hasLocalizedLabel(value: string): boolean {
-  return Object.values(domainOptions).flat().some((item) => item.ar === value || item.en === value);
+  return allOptions.some((item) => item.ar === value || item.en === value);
 }
 
 function formatDisplayRange(min: string, max: string, language: Language, unit?: DisplayRangeUnit): string {
@@ -267,4 +282,12 @@ export function localizeDisplayValue(value: unknown, language: Language, options
   if (rangeMatch) return formatDisplayRange(rangeMatch[1], rangeMatch[2], language, options.rangeUnit);
 
   return text;
+}
+
+export function normalizeDomainValue(value: unknown, group: DomainOptionGroup): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  const text = String(value).trim();
+  if (!text) return undefined;
+  const match = rawOptions[group].find((item) => item.value === text || item.ar === text || item.en === text);
+  return match?.value || text;
 }

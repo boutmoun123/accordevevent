@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Circle, FileText, MessageCircle, Settings2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bot, Circle, FileText, HeartHandshake, LockKeyhole, MessageCircle, Settings2, ShieldCheck, UserRound, UsersRound } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -18,6 +18,33 @@ const faqs = [
       ar: "تعمل Farah.event على تسهيل الوصول إلى شريك الحياة المناسب بطريقة منظمة وآمنة.\n\nتبدأ العملية بتسجيل المعلومات الأساسية، ثم يتم التعامل مع البيانات وفق ضوابط الخصوصية، وبعدها تتم عملية التوفيق بناء على المعلومات المناسبة.\n\nعند وجود توافق، تنتقل العملية إلى مرحلة التواصل والمتابعة وفق الآلية المعتمدة في المنصة.",
       en: "Farah.event helps make the path to a suitable life partner organized and secure.\n\nThe process begins by registering the basic information, then data is handled according to privacy controls, and matching is performed based on the relevant information.\n\nWhen a suitable match is found, the process moves to communication and follow-up according to the platform workflow.",
     },
+    points: [
+      {
+        icon: UserRound,
+        title: { ar: "سجل معلوماتك", en: "Register your information" },
+        body: { ar: "أدخل معلوماتك ومواصفات شريك الحياة.", en: "Enter your information and life partner preferences." },
+      },
+      {
+        icon: Bot,
+        title: { ar: "تحقق من التوافق", en: "Check compatibility" },
+        body: { ar: "يبحث الذكاء الاصطناعي عن الأشخاص المتوافقين.", en: "AI looks for compatible people." },
+      },
+      {
+        icon: ShieldCheck,
+        title: { ar: "تحقق الخطابة", en: "Matchmaker verification" },
+        body: { ar: "تتحقق الخطابة من الطرفين وجدية الطلب.", en: "The matchmaker verifies both sides and request seriousness." },
+      },
+      {
+        icon: HeartHandshake,
+        title: { ar: "تأكيد التوافق", en: "Confirm compatibility" },
+        body: { ar: "يتم التأكد من موافقة الطرفين.", en: "Both parties' approval is confirmed." },
+      },
+      {
+        icon: UsersRound,
+        title: { ar: "بدء التواصل", en: "Start communication" },
+        body: { ar: "يبدأ التواصل بالطريقة المتفق عليها.", en: "Communication begins through the agreed method." },
+      },
+    ],
     icon: Settings2,
   },
   {
@@ -28,6 +55,28 @@ const faqs = [
       ar: "خصوصيتك أولوية لدينا.\n\nلا يتم عرض بياناتك الشخصية للطرف الآخر بشكل مباشر، ويتم التعامل مع المعلومات داخل النظام وفق الصلاحيات المسموحة.\n\nلا تتم مشاركة المعلومات الحساسة إلا عندما تسمح آلية العمل بذلك.",
       en: "Your privacy is our priority.\n\nYour personal data is not shown directly to the other party, and information is handled inside the system according to allowed permissions.\n\nSensitive information is shared only when the workflow allows it.",
     },
+    points: [
+      {
+        icon: LockKeyhole,
+        title: { ar: "هوية مخفية", en: "Hidden identity" },
+        body: { ar: "لا يظهر اسمك أو بياناتك الشخصية للطرف الآخر.", en: "Your name and personal details are not shown to the other party." },
+      },
+      {
+        icon: ShieldCheck,
+        title: { ar: "بيانات محمية", en: "Protected data" },
+        body: { ar: "تستخدم معلوماتك فقط للتحقق من التوافق.", en: "Your information is used only to check compatibility." },
+      },
+      {
+        icon: HeartHandshake,
+        title: { ar: "بموافقتك فقط", en: "Only with your approval" },
+        body: { ar: "لا تتم مشاركة معلومات التواصل دون موافقتك.", en: "Contact information is not shared without your approval." },
+      },
+      {
+        icon: UsersRound,
+        title: { ar: "الهوية في الوقت المناسب", en: "Identity at the right time" },
+        body: { ar: "تكشف الهوية من خلال آلية التواصل المتفق عليها.", en: "Identity is revealed through the agreed communication process." },
+      },
+    ],
     icon: ShieldCheck,
   },
   {
@@ -97,7 +146,7 @@ export default function Home() {
   return (
     <main dir={dir} className={`min-h-screen overflow-x-hidden transition-colors ${dark ? "bg-[#1A1018] text-[#FFF8FB]" : "bg-[#FAF5F8] text-[#1F1630]"}`}>
       <Navbar />
-      <section className="relative flex min-h-[calc(100vh-80px)] items-start px-4 py-6 sm:items-center sm:px-6 lg:px-8">
+      <section className="relative flex min-h-[calc(100vh-80px)] items-start px-4 py-9 sm:items-center sm:px-6 sm:py-10 lg:px-8">
         <div className={`pointer-events-none absolute inset-x-0 top-20 mx-auto rounded-full blur-2xl ${dark ? "h-28 max-w-[220px] bg-[rgba(201,122,161,0.12)]" : "h-48 max-w-3xl bg-[#F3E6EC]"}`} />
         <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center text-center">
           <Image
@@ -109,10 +158,10 @@ export default function Home() {
             unoptimized
             className="mb-3 hidden h-24 w-24 object-contain sm:block lg:h-28 lg:w-28"
           />
-          <p className={`mb-1.5 text-sm font-semibold sm:text-base ${dark ? "text-[#C97AA1]" : "text-[#8E3D6B]"}`}>{text.welcome}</p>
+          <p className={`mb-3 text-sm font-semibold sm:mb-1.5 sm:text-base ${dark ? "text-[#C97AA1]" : "text-[#8E3D6B]"}`}>{text.welcome}</p>
           <h1 className={`max-w-[22rem] text-[1.55rem] font-bold leading-[1.35] tracking-normal sm:max-w-none sm:text-2xl ${dark ? "text-[#FFF8FB]" : "text-[#1F1630]"}`}>{text.title}</h1>
           <p className={`mt-2 max-w-[21rem] text-sm leading-6 sm:max-w-none sm:text-base ${dark ? "text-[#CDB7C3]" : "text-slate-500"}`}>{text.subtitle}</p>
-          <div className={`mt-5 grid w-full max-w-[640px] grid-cols-2 gap-2 rounded-[24px] border p-2 shadow-[0_12px_34px_rgba(142,61,107,0.10)] sm:rounded-[26px] ${dark ? "border-[#4A3040] bg-[#21121E]" : "border-[#E6D7E0] bg-white/80"}`}>
+          <div className={`mt-8 grid w-full max-w-[640px] grid-cols-2 gap-2 rounded-[24px] border p-2 shadow-[0_12px_34px_rgba(142,61,107,0.10)] sm:mt-5 sm:rounded-[26px] ${dark ? "border-[#4A3040] bg-[#21121E]" : "border-[#E6D7E0] bg-white/80"}`}>
             {(["female", "male"] as const).map((value) => (
               <button key={value} type="button" onClick={() => chooseGender(value)} className={`flex min-h-[104px] flex-col-reverse items-center justify-center gap-2 rounded-[18px] border px-3 py-3 text-center transition-colors sm:min-h-[78px] sm:flex-row sm:justify-between sm:gap-3 sm:rounded-[20px] sm:px-4 sm:text-start ${gender === value ? (dark ? "border-[#C97AA1] bg-[#261722]" : "border-[#C97AA1] bg-[#F3E6EC]") : dark ? "border-[#4A3040] bg-[#21121E] hover:border-[#C97AA1]" : "border-[#E6D7E0] bg-white hover:border-[#C97AA1]"}`}>
                 <span>
@@ -125,7 +174,7 @@ export default function Home() {
               </button>
             ))}
           </div>
-          <div className="mt-4 grid w-full max-w-[640px] grid-cols-1 gap-2 sm:mt-5 sm:grid-cols-2">
+          <div className="mt-8 grid w-full max-w-[640px] grid-cols-1 gap-4 sm:mt-5 sm:grid-cols-2 sm:gap-2">
             {visibleFaqs.map((faq) => {
               const Icon = faq.icon;
               return (
@@ -152,11 +201,30 @@ export default function Home() {
             <div className="mb-5 grid h-14 w-14 place-items-center rounded-2xl bg-[#F3E6EC] text-[#8E3D6B]">
               <activeInfoCard.icon className="h-7 w-7" />
             </div>
-            <div className="space-y-4 text-[15px] leading-8 text-slate-600">
-              {activeInfoCard.body[language].split("\n\n").map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
-            </div>
+            {activeInfoCard.points ? (
+              <div className="space-y-3">
+                {activeInfoCard.points.map((point) => {
+                  const PointIcon = point.icon;
+                  return (
+                    <div key={point.title.en} className="flex gap-3 rounded-2xl border border-[#E6D7E0] bg-white/80 p-4">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#F3E6EC] text-[#8E3D6B]">
+                        <PointIcon className="h-5 w-5" />
+                      </span>
+                      <span>
+                        <strong className="block text-[15px] text-[#1F1630]">{point.title[language]}</strong>
+                        <span className="mt-1 block text-sm leading-6 text-slate-600">{point.body[language]}</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-4 text-[15px] leading-8 text-slate-600">
+                {activeInfoCard.body[language].split("\n\n").map((paragraph) => (
+                  <p key={paragraph}>{paragraph}</p>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </Modal>

@@ -5,7 +5,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState, LoadingState } from "@/components/ui/feedback";
-import { StatusBadge } from "@/components/ui/status";
+import { StatusBadge, statusLabel } from "@/components/ui/status";
+import { domainOptions, localizeDisplayValue, notSpecified, type DomainOptionGroup } from "@/lib/domain-options";
+import { formatArabicDate, formatPercent } from "@/lib/utils";
 import { api } from "@/services/api";
 import type { MaleRequest } from "@/types";
 
@@ -37,12 +39,29 @@ const enumLabels: Record<string, string> = {
   false: "لا",
 };
 
+const fieldGroups: Record<string, DomainOptionGroup> = {
+  "male.governorate": "governorate",
+  "male.marital_status": "maritalMale",
+  "male.occupation": "occupationMale",
+  "male.employment_status": "financial",
+  "male.religious_preference": "religion",
+  "male.values": "commitmentMale",
+  "desired.governorates": "preferenceGovernorate",
+  "desired.education": "education",
+  "desired.occupation": "occupationPreference",
+  "desired.profession_preference": "occupationPreference",
+  "desired.marital_status": "maritalPreference",
+  "desired.hijab_status": "hijab",
+  "desired.religious_preference": "religion",
+  "desired.values": "commitmentPreference",
+};
+
 function present(value: unknown): string | null {
   if (value === null || value === undefined || value === "") return null;
   if (Array.isArray(value)) return value.map(present).filter(Boolean).join("، ") || null;
   if (typeof value === "object") return null;
   if (typeof value === "boolean") return value ? "نعم" : "لا";
-  if (typeof value === "string") return enumLabels[value] || value;
+  if (typeof value === "string") return enumLabels[value] || localizeDisplayValue(value, "ar");
   return String(value);
 }
 
@@ -99,8 +118,20 @@ function EditSelect({ label, name, value, options }: { label: string; name: stri
     <label>
       <span className="label">{label}</span>
       <select className="field" name={name} defaultValue={value === null || value === undefined ? "" : String(value)}>
-        <option value="">اختر</option>
-        {options.map((option) => <option key={option} value={option}>{enumLabels[option] || option}</option>)}
+        <option value="">{notSpecified.ar}</option>
+        {options.map((option) => <option key={option} value={option}>{enumLabels[option] || localizeDisplayValue(option, "ar", { group: fieldGroups[name] })}</option>)}
+      </select>
+    </label>
+  );
+}
+
+function DomainSelect({ label, name, value, group }: { label: string; name: string; value: unknown; group: DomainOptionGroup }) {
+  return (
+    <label>
+      <span className="label">{label}</span>
+      <select className="field" name={name} defaultValue={value === null || value === undefined ? "" : String(value)}>
+        <option value="">{notSpecified.ar}</option>
+        {domainOptions[group].map((option) => <option key={option.value} value={option.value}>{option.ar}</option>)}
       </select>
     </label>
   );
@@ -113,30 +144,30 @@ function RequestDetails({ request, onSaved }: { request: MaleRequest; onSaved: (
   const [saving, setSaving] = useState(false);
   const maleRows: Row[] = [
     { label: "العمر", value: male.age },
-    { label: "المحافظة الحالية", value: male.governorate },
+    { label: "المحافظة الحالية", value: localizeDisplayValue(male.governorate, "ar", { group: "governorate" }) },
     { label: "المدينة", value: male.city },
-    { label: "الحالة الاجتماعية", value: male.marital_status },
+    { label: "الحالة الاجتماعية", value: localizeDisplayValue(male.marital_status, "ar", { group: "maritalMale" }) },
     { label: "الطول", value: male.height ? `${male.height} سم` : null },
-    { label: "التعليم", value: male.education },
+    { label: "التعليم", value: localizeDisplayValue(male.education, "ar", { group: "education" }) },
     { label: "الاختصاص", value: male.education_field },
-    { label: "العمل", value: male.occupation },
-    { label: "الوضع المهني", value: male.employment_status },
-    { label: "الديانة", value: male.religious_preference },
+    { label: "العمل", value: localizeDisplayValue(male.occupation, "ar", { group: "occupationMale" }) },
+    { label: "الوضع المهني", value: localizeDisplayValue(male.employment_status, "ar", { group: "financial" }) },
+    { label: "الديانة", value: localizeDisplayValue(male.religious_preference, "ar", { group: "religion" }) },
     { label: "الأطفال", value: male.children },
-    { label: "القيم", value: male.values },
+    { label: "القيم", value: localizeDisplayValue(male.values, "ar", { group: "commitmentMale" }) },
     { label: "المواصفات الإضافية", value: male.personality_traits },
   ];
   const desiredRows: Row[] = [
-    { label: "الحالة الاجتماعية المطلوبة", value: desired.marital_status },
+    { label: "الحالة الاجتماعية المطلوبة", value: localizeDisplayValue(desired.marital_status, "ar", { group: "maritalPreference" }) },
     { label: "العمر المطلوب", value: range(desired.age_min, desired.age_max, " سنة") },
-    { label: "محافظة الإقامة", value: desired.governorates || desired.governorate },
+    { label: "محافظة الإقامة", value: localizeDisplayValue(desired.governorates || desired.governorate, "ar", { group: "preferenceGovernorate" }) },
     { label: "الطول", value: range(desired.height_min, desired.height_max, " سم") },
-    { label: "التعليم", value: desired.education },
-    { label: "الوضع المهني", value: desired.occupation || desired.profession_preference },
+    { label: "التعليم", value: localizeDisplayValue(desired.education, "ar", { group: "education" }) },
+    { label: "الوضع المهني", value: localizeDisplayValue(desired.occupation || desired.profession_preference, "ar", { group: "occupationPreference" }) },
     { label: "الأطفال", value: desired.children_preference ?? desired.children },
-    { label: "الديانة", value: desired.religious_preference },
-    { label: "اللباس", value: desired.hijab_status },
-    { label: "القيم", value: desired.values },
+    { label: "الديانة", value: localizeDisplayValue(desired.religious_preference, "ar", { group: "religion" }) },
+    { label: "اللباس", value: localizeDisplayValue(desired.hijab_status, "ar", { group: "hijab" }) },
+    { label: "القيم", value: localizeDisplayValue(desired.values, "ar", { group: "commitmentPreference" }) },
     { label: "المواصفات الإضافية", value: desired.other_criteria || desired.traits || desired.personality_traits },
   ];
 
@@ -202,15 +233,15 @@ function RequestDetails({ request, onSaved }: { request: MaleRequest; onSaved: (
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <EditInput label="العمر" name="male.age" type="number" min={18} max={90} value={male.age} required />
-            <EditInput label="المحافظة الحالية" name="male.governorate" value={male.governorate} required />
+            <DomainSelect label="المحافظة الحالية" name="male.governorate" value={male.governorate} group="governorate" />
             <EditInput label="المدينة" name="male.city" value={male.city} />
-            <EditSelect label="الحالة الاجتماعية" name="male.marital_status" value={male.marital_status} options={["SINGLE", "DIVORCED", "WIDOWED", "MARRIED"]} />
+            <DomainSelect label="الحالة الاجتماعية" name="male.marital_status" value={male.marital_status} group="maritalMale" />
             <EditInput label="الطول" name="male.height" type="number" min={120} max={230} value={male.height} />
-            <EditInput label="التعليم" name="male.education" value={male.education} />
+            <DomainSelect label="التعليم" name="male.education" value={male.education} group="education" />
             <EditInput label="الاختصاص" name="male.education_field" value={male.education_field} />
-            <EditInput label="العمل" name="male.occupation" value={male.occupation} />
-            <EditInput label="الوضع المهني" name="male.employment_status" value={male.employment_status} />
-            <EditInput label="الديانة" name="male.religious_preference" value={male.religious_preference} />
+            <DomainSelect label="العمل" name="male.occupation" value={male.occupation} group="occupationMale" />
+            <DomainSelect label="الوضع المهني" name="male.employment_status" value={male.employment_status} group="financial" />
+            <DomainSelect label="الديانة" name="male.religious_preference" value={male.religious_preference} group="religion" />
             <EditSelect label="الأطفال" name="male.children" value={male.children} options={["true", "false"]} />
             <EditInput label="القيم" name="male.values" value={male.values} />
             <EditInput label="المواصفات الإضافية" name="male.personality_traits" value={male.personality_traits} />
@@ -224,13 +255,13 @@ function RequestDetails({ request, onSaved }: { request: MaleRequest; onSaved: (
             <EditInput label="المحافظات" name="desired.governorates" value={desired.governorates || desired.governorate} />
             <EditInput label="الطول من" name="desired.height_min" type="number" min={120} max={230} value={desired.height_min} />
             <EditInput label="الطول إلى" name="desired.height_max" type="number" min={120} max={230} value={desired.height_max} />
-            <EditInput label="التعليم" name="desired.education" value={desired.education} />
-            <EditInput label="العمل" name="desired.occupation" value={desired.occupation} />
-            <EditInput label="المهنة" name="desired.profession_preference" value={desired.profession_preference} />
-            <EditSelect label="الحالة الاجتماعية" name="desired.marital_status" value={desired.marital_status} options={["SINGLE", "DIVORCED", "WIDOWED"]} />
+            <DomainSelect label="التعليم" name="desired.education" value={desired.education} group="education" />
+            <DomainSelect label="العمل" name="desired.occupation" value={desired.occupation} group="occupationPreference" />
+            <DomainSelect label="المهنة" name="desired.profession_preference" value={desired.profession_preference} group="occupationPreference" />
+            <DomainSelect label="الحالة الاجتماعية" name="desired.marital_status" value={desired.marital_status} group="maritalPreference" />
             <EditSelect label="الأطفال" name="desired.children_preference" value={desired.children_preference ?? desired.children} options={["true", "false"]} />
-            <EditSelect label="اللباس" name="desired.hijab_status" value={desired.hijab_status} options={["HIJAB", "NIQAB", "NONE", "OTHER"]} />
-            <EditInput label="الديانة" name="desired.religious_preference" value={desired.religious_preference} />
+            <DomainSelect label="اللباس" name="desired.hijab_status" value={desired.hijab_status} group="hijab" />
+            <DomainSelect label="الديانة" name="desired.religious_preference" value={desired.religious_preference} group="religion" />
             <EditInput label="القيم" name="desired.values" value={desired.values} />
             <EditInput label="الصفات" name="desired.traits" value={desired.traits} />
             <EditInput label="مواصفات إضافية" name="desired.other_criteria" value={desired.other_criteria || desired.personality_traits} />
@@ -336,7 +367,7 @@ export function MaleRequestSearch() {
                 <h3 className="font-mono text-xl font-bold" dir="ltr">{data.request.request_code}</h3>
               </div>
               <StatusBadge status={data.request.verification_status} />
-              <p className="text-sm text-slate-500">تاريخ الإنشاء: {data.request.created_at ? new Date(data.request.created_at).toLocaleDateString("ar-SY") : "غير محدد"}</p>
+              <p className="text-sm text-slate-500">تاريخ الإنشاء: {data.request.created_at ? formatArabicDate(data.request.created_at, { dateStyle: "medium" }) : "غير محدد"}</p>
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
               {data.request.verification_status !== "VERIFIED" && <Button onClick={() => void verify("VERIFIED")}><ShieldCheck size={17} /> توثيق الشاب</Button>}
@@ -355,8 +386,8 @@ export function MaleRequestSearch() {
                       <span className="font-mono text-xs">{candidate.female_profile_id}</span>
                       <StatusBadge status={candidate.status} />
                     </div>
-                    <strong className="mt-3 block text-brand-rose">{candidate.mutual_score}% توافق متبادل</strong>
-                    <p className="mt-2 text-xs leading-6 text-slate-500">توافق تفضيلات الشاب: {candidate.male_to_female_score ?? "غير محدد"}%، وتوافق تفضيلات الفتاة: {candidate.female_to_male_score ?? "غير محدد"}%.</p>
+                    <strong className="mt-3 block text-brand-rose">{formatPercent(candidate.mutual_score)} توافق متبادل</strong>
+                    <p className="mt-2 text-xs leading-6 text-slate-500">توافق تفضيلات الشاب: {formatPercent(candidate.male_to_female_score)}، وتوافق تفضيلات الفتاة: {formatPercent(candidate.female_to_male_score)}.</p>
                     <Button className="mt-3 w-full" size="sm" onClick={async () => {
                       try {
                         await api.post("/matchmaker/match-cases", { candidate_id: candidate.id });
@@ -372,7 +403,7 @@ export function MaleRequestSearch() {
           </section>
           <section className="panel">
             <h3 className="font-bold">سجل الحالة</h3>
-            <p className="mt-2 text-sm text-slate-500">حالة الطلب الحالية: {present(data.request.workflow_status) || "غير محدد"}</p>
+            <p className="mt-2 text-sm text-slate-500">حالة الطلب الحالية: {statusLabel(data.request.workflow_status, "ar")}</p>
           </section>
         </div>
       ) : (
@@ -391,7 +422,7 @@ export function MaleRequestSearch() {
                   <button type="button" key={request.id} onClick={() => void search(request.request_code)} className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-start transition hover:border-brand-rose hover:bg-white">
                     <span className="block font-mono text-sm font-bold" dir="ltr">{request.request_code}</span>
                     <span className="mt-3 inline-block"><StatusBadge status={request.verification_status} /></span>
-                    <span className="mt-3 block text-xs text-slate-500">{request.created_at ? new Date(request.created_at).toLocaleDateString("ar-SY") : "تاريخ غير محدد"}</span>
+                    <span className="mt-3 block text-xs text-slate-500">{request.created_at ? formatArabicDate(request.created_at, { dateStyle: "medium" }) : "تاريخ غير محدد"}</span>
                   </button>
                 ))}
               </div>

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { domainOptions, labelForOption, localizeDisplayValue, localizeDomainValue } from "./domain-options";
+import { domainOptions, labelForOption, localizeDisplayValue, localizeDomainValue, normalizeDomainValue } from "./domain-options";
 
 describe("domain option labels", () => {
   it.each([
@@ -60,5 +60,20 @@ describe("domain option labels", () => {
   it("keeps existing labels and free-text answers intact", () => {
     expect(localizeDisplayValue("سيدة منزل", "ar", { group: "occupationFemale" })).toBe("سيدة منزل");
     expect(localizeDisplayValue("أحب القراءة", "ar")).toBe("أحب القراءة");
+  });
+
+  it("does not expose duplicate labels in selectable domain options", () => {
+    for (const [group, values] of Object.entries(domainOptions)) {
+      const arabicLabels = values.map((item) => item.ar);
+      const englishLabels = values.map((item) => item.en);
+      expect(new Set(arabicLabels).size, `${group}:ar`).toBe(arabicLabels.length);
+      expect(new Set(englishLabels).size, `${group}:en`).toBe(englishLabels.length);
+    }
+  });
+
+  it("normalizes localized labels back to stable enum values", () => {
+    expect(normalizeDomainValue("دمشق", "governorate")).toBe("DAMASCUS");
+    expect(normalizeDomainValue("Damascus", "governorate")).toBe("DAMASCUS");
+    expect(normalizeDomainValue("عمل حر", "occupationMale")).toBe("SELF_EMPLOYED");
   });
 });

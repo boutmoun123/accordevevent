@@ -10,26 +10,24 @@ const text = {
   ar: {
     copied: "تم نسخ رقم الطلب",
     title: "تم حفظ طلبك بنجاح",
-    body: "احتفظ برقم الطلب لاستخدامه عند التواصل مع الخطّابة.",
+    body: "احتفظ برقم الطلب لمتابعة حالة طلبك.",
     copy: "نسخ رقم الطلب",
     matchesPrefix: "تم العثور على",
     matchesSuffix: "فرص توافق مناسبة لطلبك.",
     privacy: "حفاظا على الخصوصية، لا نعرض أي بيانات تعريفية.",
     refresh: "تحديث النتيجة",
     follow: "متابعة طلبي",
-    contact: "التواصل مع الخطّابة",
   },
   en: {
     copied: "Request code copied",
     title: "Your request was saved successfully",
-    body: "Keep this request code for follow-up with the matchmaker.",
+    body: "Keep this request code to follow your request status.",
     copy: "Copy request code",
     matchesPrefix: "We found",
     matchesSuffix: "suitable match opportunities for your request.",
     privacy: "To protect privacy, identifying details are not shown.",
     refresh: "Refresh result",
     follow: "Follow my request",
-    contact: "Contact the matchmaker",
   },
 };
 
@@ -74,14 +72,11 @@ export function RequestSuccess({
           )}
         </div>
       )}
-      <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+      <div className="mt-6 flex justify-center">
         <Button asChild>
           <Link href="/account">
             <Headphones size={17} /> {t.follow}
           </Link>
-        </Button>
-        <Button asChild variant="secondary">
-          <Link href="/#contact">{t.contact}</Link>
         </Button>
       </div>
     </div>

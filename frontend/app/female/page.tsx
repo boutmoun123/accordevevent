@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight, CheckCircle2, LockKeyhole, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, HeartHandshake, LockKeyhole, MessageCircle, Phone, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -82,6 +82,24 @@ const text = {
     submitError: "Could not send the request",
   },
 };
+
+const privacyPoints = [
+  {
+    icon: UserRound,
+    title: { ar: "بياناتك مخفية", en: "Your data is hidden" },
+    body: { ar: "لا نعرض معلوماتك الشخصية لأي مستخدم.", en: "We do not show your personal information to any user." },
+  },
+  {
+    icon: MessageCircle,
+    title: { ar: "التواصل عبر الخطابة", en: "Contact through the matchmaker" },
+    body: { ar: "يتم إنشاء ملفك ومتابعته من خلال الخطابة فقط.", en: "Your profile is created and followed only through the matchmaker." },
+  },
+  {
+    icon: HeartHandshake,
+    title: { ar: "توافق قبل التواصل", en: "Compatibility before contact" },
+    body: { ar: "لا يبدأ التواصل إلا عند وجود توافق وموافقة الطرفين.", en: "Communication starts only after compatibility and both sides approve." },
+  },
+];
 
 export default function FemalePage() {
   const { language, dir, isDark } = usePreferences();
@@ -171,10 +189,21 @@ export default function FemalePage() {
                 <LockKeyhole />
               </div>
               <h1 className="mt-6 text-3xl font-bold">{t.introTitle}</h1>
-              <div className={`mt-4 space-y-4 leading-8 ${isDark ? "text-[#E8BDD0]" : "text-slate-600"}`}>
-                {t.introBody.split("\n\n").map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
+              <div className="mt-5 space-y-3">
+                {privacyPoints.map((point) => {
+                  const PointIcon = point.icon;
+                  return (
+                    <div key={point.title.en} className={`flex gap-3 rounded-2xl border p-4 ${isDark ? "border-[#4A3040] bg-[#261722]" : "border-[#E6D7E0] bg-white/80"}`}>
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-pink text-brand-rose">
+                        <PointIcon className="h-5 w-5" />
+                      </span>
+                      <span className="text-start">
+                        <strong className="block text-[15px]">{point.title[language]}</strong>
+                        <span className={`mt-1 block text-sm leading-6 ${isDark ? "text-[#E8BDD0]" : "text-slate-600"}`}>{point.body[language]}</span>
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
               <div className="mt-8 grid gap-3">
                 <Button onClick={openForm}>

@@ -1,14 +1,16 @@
 "use client";
 
-import { Bell, ChevronDown, LogOut, Menu, Moon, Sun, X } from "lucide-react";
+import { Bell, CheckCheck, ChevronDown, LogOut, Menu, Moon, Sun, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/components/providers/auth-provider";
 import { usePreferences } from "@/components/providers/preferences-provider";
 import { languageLabel } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
+import { api } from "@/services/api";
+import type { Notification } from "@/types";
 
 export interface NavItem {
   label: string;
@@ -23,6 +25,10 @@ const shellText = {
     closeMenu: "إغلاق القائمة",
     subtitle: "إدارة آمنة ومنظمة لرحلة التوفيق",
     notifications: "الإشعارات",
+    noNotifications: "لا توجد إشعارات",
+    loadingNotifications: "جاري تحميل الإشعارات...",
+    viewAll: "عرض الكل",
+    markRead: "تمت القراءة",
     user: "المستخدم",
   },
   en: {
@@ -30,6 +36,10 @@ const shellText = {
     closeMenu: "Close menu",
     subtitle: "Secure, organized management for the matchmaking journey",
     notifications: "Notifications",
+    noNotifications: "No notifications",
+    loadingNotifications: "Loading notifications...",
+    viewAll: "View all",
+    markRead: "Mark read",
     user: "User",
   },
 };
@@ -44,10 +54,41 @@ export function DashboardShell({
   title: string;
 }) {
   const [open, setOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
   const path = usePathname();
   const { user, signOut } = useAuth();
   const { dir, language, toggleLanguage, isDark, toggleTheme } = usePreferences();
   const text = shellText[language];
+  const scope = path.startsWith("/admin") ? "admin" : path.startsWith("/matchmaker") ? "matchmaker" : undefined;
+  const notificationsHref = scope ? `/${scope}/notifications` : "#";
+  const unreadCount = useMemo(() => notifications.filter((item) => !item.read_at).length, [notifications]);
+  const loadNotifications = useCallback(async () => {
+    if (!scope) return;
+    setNotificationsLoading(true);
+    try {
+      const result = await api.get<Notification[] | { items: Notification[] }>(`/${scope}/notifications`);
+      setNotifications(Array.isArray(result) ? result : result.items);
+    } catch {
+      setNotifications([]);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, [scope]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch external notification data when the dashboard scope changes.
+    void loadNotifications();
+  }, [loadNotifications]);
+
+  const markNotificationRead = async (id: string) => {
+    if (!scope) return;
+    await api.patch(`/${scope}/notifications/${id}`, { read: true });
+    setNotifications((items) =>
+      items.map((item) => item.id === id ? { ...item, read_at: new Date().toISOString() } : item),
+    );
+  };
 
   const sidebar = (
     <>
@@ -119,10 +160,62 @@ export function DashboardShell({
             <button type="button" onClick={toggleTheme} className={`rounded-xl border p-2.5 ${isDark ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C]" : "border-[#E6D7E0] bg-white text-[#6E3357] hover:bg-[#F3E6EC]"}`} aria-label={isDark ? "Light mode" : "Dark mode"}>
               {isDark ? <Moon size={19} /> : <Sun size={19} />}
             </button>
-            <button className={`relative rounded-xl border p-2.5 ${isDark ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C]" : "border-[#E6D7E0] bg-white text-[#6E3357] hover:bg-[#F3E6EC]"}`} aria-label={text.notifications}>
-              <Bell size={19} />
-              <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-brand-rose ring-2 ring-white" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setNotificationsOpen((value) => !value);
+                  void loadNotifications();
+                }}
+                className={`relative rounded-xl border p-2.5 ${isDark ? "border-[#4A3040] bg-[#261722] text-[#C97AA1] hover:bg-[#30202C]" : "border-[#E6D7E0] bg-white text-[#6E3357] hover:bg-[#F3E6EC]"}`}
+                aria-label={text.notifications}
+                aria-expanded={notificationsOpen}
+              >
+                <Bell size={19} />
+                {unreadCount > 0 && (
+                  <span className="absolute -left-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-brand-rose px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              {notificationsOpen && (
+                <div className={`absolute left-0 top-12 z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border shadow-xl ${isDark ? "border-[#4A3040] bg-[#21121E]" : "border-[#E6D7E0] bg-white"}`}>
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                    <h2 className="font-bold">{text.notifications}</h2>
+                    <Link href={notificationsHref} onClick={() => setNotificationsOpen(false)} className="text-xs font-semibold text-brand-rose">
+                      {text.viewAll}
+                    </Link>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto p-2">
+                    {notificationsLoading ? (
+                      <p className="p-4 text-sm text-slate-500">{text.loadingNotifications}</p>
+                    ) : notifications.length ? (
+                      notifications.slice(0, 6).map((item) => (
+                        <article key={item.id} className={`rounded-xl p-3 ${item.read_at ? "opacity-70" : isDark ? "bg-[#2A1A26]" : "bg-brand-pink/60"}`}>
+                          <div className="flex items-start gap-3">
+                            <span className="mt-1 rounded-lg bg-white/70 p-2 text-brand-rose">
+                              <Bell size={15} />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="truncate text-sm font-semibold">{item.title || item.type.replaceAll("_", " ")}</h3>
+                              <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{item.body || item.message || "—"}</p>
+                              <time className="mt-2 block text-[11px] text-slate-400">{formatDate(item.created_at)}</time>
+                            </div>
+                            {!item.read_at && (
+                              <button type="button" onClick={() => void markNotificationRead(item.id)} className="rounded-lg p-1.5 text-brand-rose hover:bg-white/70" aria-label={text.markRead}>
+                                <CheckCheck size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </article>
+                      ))
+                    ) : (
+                      <p className="p-4 text-sm text-slate-500">{text.noNotifications}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <button className={`hidden items-center gap-3 rounded-xl border p-2 sm:flex ${isDark ? "border-[#4A3040] bg-[#261722]" : "border-[#E6D7E0] bg-white"}`}>
               <div className="grid h-8 w-8 place-items-center rounded-lg bg-brand-pink text-sm font-bold text-brand-rose">
                 {user?.first_name?.[0] || "F"}

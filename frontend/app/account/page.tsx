@@ -18,7 +18,7 @@ type EditableSection = "male_characteristics" | "desired_female_characteristics"
 type FieldRow = {
   key: string;
   label: { ar: string; en: string };
-  type: "number" | "text" | "select" | "multi-select";
+  type: "number" | "text" | "select" | "multi-select" | "boolean-select";
   group?: DomainOptionGroup;
   unit?: "age" | "height";
 };
@@ -35,7 +35,7 @@ const selfFields: FieldRow[] = [
   { key: "occupation", label: { ar: "المهنة", en: "Occupation" }, type: "select", group: "occupationMale" },
   { key: "employment_status", label: { ar: "الوضع المادي", en: "Financial status" }, type: "select", group: "financial" },
   { key: "religious_preference", label: { ar: "الدين", en: "Religion" }, type: "select", group: "religion" },
-  { key: "children", label: { ar: "الأطفال", en: "Children" }, type: "text" },
+  { key: "children", label: { ar: "الأطفال", en: "Children" }, type: "boolean-select" },
   { key: "values", label: { ar: "القيم والتفضيلات", en: "Values and preferences" }, type: "multi-select", group: "commitmentMale" },
   { key: "personality_traits", label: { ar: "صفات شخصية", en: "Personality traits" }, type: "text" },
   { key: "preferred_contact", label: { ar: "طريقة التواصل المفضلة", en: "Preferred contact" }, type: "text" },
@@ -52,8 +52,8 @@ const desiredFields: FieldRow[] = [
   { key: "education", label: { ar: "التعليم", en: "Education" }, type: "select", group: "education" },
   { key: "occupation", label: { ar: "المهنة", en: "Occupation" }, type: "select", group: "occupationPreference" },
   { key: "profession_preference", label: { ar: "تفضيل العمل", en: "Work preference" }, type: "select", group: "occupationPreference" },
-  { key: "children", label: { ar: "الأطفال", en: "Children" }, type: "text" },
-  { key: "children_preference", label: { ar: "تفضيل الأطفال", en: "Children preference" }, type: "text" },
+  { key: "children", label: { ar: "الأطفال", en: "Children" }, type: "boolean-select" },
+  { key: "children_preference", label: { ar: "تفضيل الأطفال", en: "Children preference" }, type: "boolean-select" },
   { key: "religious_preference", label: { ar: "الدين", en: "Religion" }, type: "select", group: "religion" },
   { key: "values", label: { ar: "درجة الالتزام", en: "Religious commitment" }, type: "multi-select", group: "commitmentPreference" },
   { key: "hijab_status", label: { ar: "اللباس", en: "Dress style" }, type: "select", group: "hijab" },
@@ -140,6 +140,7 @@ function displayValue(value: unknown, field: FieldRow, language: "ar" | "en") {
 }
 
 function editValue(value: unknown) {
+  if (typeof value === "boolean") return String(value);
   if (Array.isArray(value)) return value.join(", ");
   if (value === undefined || value === null || value === "") return "";
   return String(value);
@@ -148,12 +149,20 @@ function editValue(value: unknown) {
 function coerceValue(raw: string, field: FieldRow, current: unknown) {
   const value = raw.trim();
   if (field.type === "multi-select" || Array.isArray(current)) return value ? value.split(/[,،]/).map((item) => item.trim()).filter(Boolean) : [];
+  if (field.type === "boolean-select") return value === "" ? undefined : value === "true";
   if (field.type === "number") return value ? Number(value) : undefined;
   return value || undefined;
 }
 
 function optionsFor(field: FieldRow): DomainOption[] {
   return field.group ? domainOptions[field.group] : [];
+}
+
+function booleanOptions(): DomainOption[] {
+  return [
+    { value: "true", ar: "نعم", en: "Yes" },
+    { value: "false", ar: "لا", en: "No" },
+  ];
 }
 
 function RequestEditList({
@@ -203,7 +212,7 @@ function RequestEditList({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-slate-500">{labelMap[language]}</p>
                   {isEditing ? (
-                    type === "select" || type === "multi-select" ? (
+                    type === "select" || type === "multi-select" || type === "boolean-select" ? (
                       <select
                         className="field mt-2 min-h-11 max-w-full"
                         dir={dir}
@@ -214,8 +223,8 @@ function RequestEditList({
                           setValue(type === "multi-select" ? selected.join(", ") : selected[0] || "");
                         }}
                       >
-                        {type === "select" && <option value="">{notSpecified[language]}</option>}
-                        {optionsFor(field).map((item) => (
+                        {type !== "multi-select" && <option value="">{notSpecified[language]}</option>}
+                        {(type === "boolean-select" ? booleanOptions() : optionsFor(field)).map((item) => (
                           <option key={item.value} value={item.value}>{item[language]}</option>
                         ))}
                       </select>

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { api } from "@/services/api";
+import { formatArabicDate } from "@/lib/utils";
 import {
   scheduleError,
   weekdays,
@@ -326,13 +327,13 @@ export function AvailabilityManager() {
             className="space-y-3 rounded-2xl border border-slate-100 bg-white p-5"
           >
             <p>
-              {new Date(appointment.scheduled_at).toLocaleString("ar-SY", {
+              {formatArabicDate(appointment.scheduled_at, {
                 timeZone: "Asia/Damascus",
                 dateStyle: "full",
                 timeStyle: "short",
               })}{" "}
               —{" "}
-              {new Date(appointment.ends_at).toLocaleTimeString("ar-SY", {
+              {formatArabicDate(appointment.ends_at, {
                 timeZone: "Asia/Damascus",
                 hour: "numeric",
                 minute: "2-digit",

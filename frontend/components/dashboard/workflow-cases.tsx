@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/feedback";
-import { StatusBadge } from "@/components/ui/status";
+import { StatusBadge, statusLabel } from "@/components/ui/status";
 import { api } from "@/services/api";
 import type { MatchCase } from "@/types";
 const next: Record<string, string[]> = {
@@ -88,9 +88,20 @@ export function WorkflowCases({
                   <p className="text-xs text-slate-400">
                     {x.case_code || x.id}
                   </p>
-                  <h3 className="mt-1 font-bold">طلب {x.male_request_id}</h3>
+                  <h3 className="mt-1 font-bold">طلب الشاب</h3>
+                  <p className="mt-1 font-mono text-xs text-slate-500" dir="ltr">{x.male_request_id}</p>
                 </div>
                 <StatusBadge status={x.status} />
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/${scope}/male-requests`}>فتح طلبات الشباب</Link>
+                </Button>
+                {x.female_profile_id && (
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/${scope}/female-profiles`}>فتح ملفات الفتيات</Link>
+                  </Button>
+                )}
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-xl bg-slate-50 p-3">
@@ -120,7 +131,7 @@ export function WorkflowCases({
                       onClick={() => void advance(x, s)}
                     >
                       <ArrowLeft size={15} />{" "}
-                      {s.replaceAll("_", " ")}
+                      {statusLabel(s, "ar")}
                     </Button>
                   ))}
                 </div>

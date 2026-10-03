@@ -4,10 +4,16 @@ import { api } from "@/services/api";
 import { toast } from "sonner";
 import { FemaleProfileForm, MeetingForm, PaymentForm } from "./entity-forms";
 
-vi.mock("@/services/api", () => ({ api: { post: vi.fn(), patch: vi.fn() } }));
+vi.mock("@/services/api", () => ({ api: { get: vi.fn(), post: vi.fn(), patch: vi.fn() } }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
-beforeEach(() => vi.resetAllMocks());
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(api.get).mockImplementation(async (path: string) => {
+    if (path === "/matchmaker/settings") return { contact_opening_fee: 50 };
+    return [];
+  });
+});
 
 describe("API forms", () => {
   it("omits blank optional numbers when creating a female profile", async () => {
@@ -71,6 +77,43 @@ describe("API forms", () => {
     await waitFor(() => expect(api.post).toHaveBeenCalled());
     expect(vi.mocked(api.post).mock.calls[0][1]).not.toHaveProperty("amount");
     expect(vi.mocked(api.post).mock.calls[0][1]).not.toHaveProperty("match_case_id");
+  });
+
+  it("lets the matchmaker pick a male request when recording a payment", async () => {
+    vi.mocked(api.get).mockResolvedValue([
+      {
+        id: "male-request-1",
+        request_code: "FRH-2026-AAAA",
+        verification_status: "VERIFIED",
+        male_characteristics: { age: 35, governorate: "DAMASCUS", occupation: "EMPLOYEE" },
+      },
+    ]);
+    vi.mocked(api.get).mockImplementation(async (path: string) => {
+      if (path === "/matchmaker/settings") return { contact_opening_fee: 75 };
+      return [
+        {
+          id: "male-request-1",
+          request_code: "FRH-2026-AAAA",
+          verification_status: "VERIFIED",
+          male_characteristics: { age: 35, governorate: "DAMASCUS", occupation: "EMPLOYEE" },
+        },
+      ];
+    });
+    vi.mocked(api.post).mockResolvedValue({});
+    const { container } = render(<PaymentForm done={vi.fn()} />);
+
+    await screen.findByText("FRH-2026-AAAA");
+    fireEvent.click(screen.getByText("FRH-2026-AAAA"));
+    fireEvent.change(screen.getByLabelText(/العملة/), { target: { value: "SYP" } });
+    fireEvent.change(screen.getByLabelText(/الحالة/), { target: { value: "PAID" } });
+    fireEvent.submit(container.querySelector("form")!);
+
+    await waitFor(() => expect(api.post).toHaveBeenCalled());
+    expect(vi.mocked(api.post).mock.calls[0][1]).toMatchObject({
+      male_request_id: "male-request-1",
+      currency: "SYP",
+      status: "PAID",
+    });
   });
 
   it("shows a clear Arabic message for API validation failures and leaves the form open", async () => {

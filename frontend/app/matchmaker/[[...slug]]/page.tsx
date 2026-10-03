@@ -9,8 +9,10 @@ import { Notifications } from "@/components/dashboard/notifications";
 import { WorkflowCases } from "@/components/dashboard/workflow-cases";
 import {
   FemaleProfileForm,
+  FemaleProfileWizard,
   PaymentForm,
 } from "@/components/forms/entity-forms";
+import { formatArabicDate } from "@/lib/utils";
 export default function Page({
   params,
 }: {
@@ -29,7 +31,7 @@ export default function Page({
           title="ملفات الفتيات"
           description="إدارة البيانات الخاصة والعامة والتفضيلات. تزامَن الملفات النشطة فقط للبحث."
           endpoint="/matchmaker/female-profiles"
-          createForm={(done) => <FemaleProfileForm done={done} />}
+          createForm={(done) => <FemaleProfileWizard done={done} />}
           editForm={(row, done) => <FemaleProfileForm done={done} initial={row} />}
           filters={[
             {
@@ -83,7 +85,7 @@ export default function Page({
               label: "التاريخ والساعة",
               render: (v) =>
                 v
-                  ? new Date(String(v)).toLocaleString("ar-SY", {
+                  ? formatArabicDate(String(v), {
                       timeZone: "Asia/Damascus",
                       dateStyle: "long",
                       timeStyle: "short",

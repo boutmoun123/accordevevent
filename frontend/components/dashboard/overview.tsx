@@ -3,6 +3,7 @@ import { Activity, UsersRound } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { ErrorState, LoadingState, EmptyState } from "@/components/ui/feedback";
 import { api } from "@/services/api";
+import { formatArabicDate, formatNumber } from "@/lib/utils";
 import type { DashboardData } from "@/types";
 const labels: Record<string, string> = {
   male_users: "إجمالي الشباب",
@@ -78,7 +79,7 @@ export function DashboardOverview({
                 </div>
               </div>
               <strong className="mt-4 block text-3xl" dir="ltr">
-                {new Intl.NumberFormat("ar-SY").format(value)}
+                {formatNumber(value)}
               </strong>
             </div>
           ))}
@@ -103,7 +104,7 @@ export function DashboardOverview({
                 <p className="text-sm">{x.description}</p>
                 <span className="text-xs text-slate-400">
                   {x.created_at
-                    ? new Date(x.created_at).toLocaleDateString("ar-SY")
+                    ? formatArabicDate(x.created_at, { dateStyle: "medium" })
                     : ""}
                 </span>
               </div>
